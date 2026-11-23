@@ -1,0 +1,25 @@
+╔══════════════════════════════════════════════════════════╗
+║              COFFEELYTICS - PUNTO DE VENTA               ║
+║               COMPROBANTE OFICIAL DE VENTA               ║
+╠══════════════════════════════════════════════════════════╣
+║ Folio de venta:     #00026                               ║
+║ Fecha y hora:       2026-11-21 22:46:14                  ║
+║ Atendido por:       Cristian Gomez                       ║
+║ Cliente:            Karen                                ║
+╟──────────────────────────────────────────────────────────╢
+║ CANT │ PRODUCTO                  │    P.UNIT │   IMPORTE ║
+║ ─────┼───────────────────────────┼───────────┼────────── ║
+║    1 │ Latte Calabaza Festivo    │    $78.00 │    $78.00 ║
+╟──────────────────────────────────────────────────────────╢
+║                           Subtotal:               $78.00 ║
+║                           IVA (8%):                $6.24 ║
+║                           TOTAL A PAGAR:          $84.24 ║
+╟──────────────────────────────────────────────────────────╢
+║ Metodo de pago:     Efectivo                             ║
+║ Efectivo recibido:  $100.00                              ║
+║ Cambio entregado:   $15.76                               ║
+╟──────────────────────────────────────────────────────────╢
+║                Gracias por su preferencia                ║
+║                  Respaldo guardado en:                   ║
+║          documentos/salida/Ticket_Venta_26.txt           ║
+╚══════════════════════════════════════════════════════════╝

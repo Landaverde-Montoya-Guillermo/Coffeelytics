@@ -1,5 +1,6 @@
 from repositorios.base_repositorios import BaseRepositorio
 from entidades.producto import Producto
+from config.reglas import ESTATUS_ACTIVO
 
 
 class ProductoRepositorio(BaseRepositorio):
@@ -7,13 +8,17 @@ class ProductoRepositorio(BaseRepositorio):
     def obtener_categorias_con_conteo(self):
         self._cursor.execute("""
             SELECT c.codigo, c.nombre,
-                   COUNT(p.codigo) AS total,
-                   SUM(CASE WHEN p.estatus = 1 THEN 1 ELSE 0 END) AS disponibles
+                   COUNT(DISTINCT p.codigo) AS total,
+                   COUNT(DISTINCT CASE
+                       WHEN p.estatus = %s AND ri.insumo IS NOT NULL THEN p.codigo
+                   END) AS disponibles
             FROM categoria_producto c
             LEFT JOIN producto p ON c.codigo = p.categoria
+            LEFT JOIN receta r ON r.producto = p.codigo
+            LEFT JOIN rec_insum ri ON ri.receta = r.codigo
             GROUP BY c.codigo, c.nombre
             ORDER BY c.codigo
-        """)
+        """, (ESTATUS_ACTIVO,))
         return self._cursor.fetchall()
 
     def obtener_por_categoria(self, cod_categoria):
@@ -23,8 +28,52 @@ class ProductoRepositorio(BaseRepositorio):
             FROM producto p
             INNER JOIN categoria_producto c ON p.categoria = c.codigo
             WHERE p.categoria = %s
+              AND p.estatus = %s
+              AND EXISTS (
+                  SELECT 1
+                  FROM receta r
+                  INNER JOIN rec_insum ri ON ri.receta = r.codigo
+                  WHERE r.producto = p.codigo
+              )
             ORDER BY p.codigo
-        """, (cod_categoria,))
+        """, (cod_categoria, ESTATUS_ACTIVO))
+        return [
+            Producto(f["codigo"], f["nombre"], f["precio"],
+                     f["estatus"], f["cat_cod"], f["cat_nom"])
+            for f in self._cursor.fetchall()
+        ]
+
+    def es_vendible(self, cod_producto):
+        self._cursor.execute("""
+            SELECT 1
+            FROM producto p
+            WHERE p.codigo = %s
+              AND p.estatus = %s
+              AND EXISTS (
+                  SELECT 1
+                  FROM receta r
+                  INNER JOIN rec_insum ri ON ri.receta = r.codigo
+                  WHERE r.producto = p.codigo
+              )
+        """, (cod_producto, ESTATUS_ACTIVO))
+        return self._cursor.fetchone() is not None
+
+    def obtener_catalogo_vendible(self):
+        """Todos los productos activos con receta y insumos, de todas las categorias."""
+        self._cursor.execute("""
+            SELECT p.codigo, p.nombre, p.precio, p.estatus,
+                   c.codigo AS cat_cod, c.nombre AS cat_nom
+            FROM producto p
+            INNER JOIN categoria_producto c ON p.categoria = c.codigo
+            WHERE p.estatus = %s
+              AND EXISTS (
+                  SELECT 1
+                  FROM receta r
+                  INNER JOIN rec_insum ri ON ri.receta = r.codigo
+                  WHERE r.producto = p.codigo
+              )
+            ORDER BY p.nombre
+        """, (ESTATUS_ACTIVO,))
         return [
             Producto(f["codigo"], f["nombre"], f["precio"],
                      f["estatus"], f["cat_cod"], f["cat_nom"])

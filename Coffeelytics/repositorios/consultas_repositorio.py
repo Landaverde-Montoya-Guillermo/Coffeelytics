@@ -14,6 +14,59 @@ class ConsultasRepositorio(BaseRepositorio):
         compras = self._cursor.fetchone() or {"gastos": 0}
         return ventas, compras
 
+    def ventas_del_dia_por_metodo(self):
+        """
+        Ventas de la fecha actual agrupadas por metodo de pago.
+        El subtotal e IVA salen de las lineas (prod_venta); el total, de la cabecera (venta).
+        """
+        self._cursor.execute("""
+            SELECT m.codigo, m.descripcion AS metodo,
+                   COUNT(v.codigo)           AS operaciones,
+                   COALESCE(SUM(x.sub), 0)   AS subtotal,
+                   COALESCE(SUM(x.iva), 0)   AS iva,
+                   COALESCE(SUM(v.total), 0) AS total
+            FROM venta v
+            INNER JOIN metodo_pago m ON v.metodoPago = m.codigo
+            LEFT JOIN (
+                SELECT venta, SUM(subtotal) AS sub, SUM(totalIVA) AS iva
+                FROM prod_venta
+                GROUP BY venta
+            ) x ON x.venta = v.codigo
+            WHERE DATE(v.fecha) = CURDATE()
+            GROUP BY m.codigo, m.descripcion
+            ORDER BY m.descripcion
+        """)
+        return self._cursor.fetchall()
+
+    def ventas_por_barista(self):
+        """Todos los baristas (LEFT JOIN empleado-venta) con numero de tickets y total vendido."""
+        self._cursor.execute("""
+            SELECT e.num AS id,
+                   CONCAT(e.nombrePila, ' ', e.primApell) AS barista,
+                   COUNT(v.codigo)           AS tickets,
+                   COALESCE(SUM(v.total), 0) AS total
+            FROM empleado e
+            LEFT JOIN venta v ON v.empleado = e.num
+            GROUP BY e.num, e.nombrePila, e.primApell
+            ORDER BY total DESC, e.num
+        """)
+        return self._cursor.fetchall()
+
+    def ventas_de_barista(self, num_empleado):
+        """Todos los tickets cobrados por un barista, del mas reciente al mas antiguo."""
+        self._cursor.execute("""
+            SELECT v.codigo AS folio,
+                   DATE_FORMAT(v.fecha, '%d/%m/%Y %H:%i') AS fecha,
+                   v.nombreCliente AS cliente,
+                   m.descripcion   AS metodo,
+                   v.total
+            FROM venta v
+            INNER JOIN metodo_pago m ON v.metodoPago = m.codigo
+            WHERE v.empleado = %s
+            ORDER BY v.codigo DESC
+        """, (num_empleado,))
+        return self._cursor.fetchall()
+
     def listar_ventas_recientes(self, limite=20):
         self._cursor.execute(f"""
             SELECT v.codigo AS folio,
@@ -75,11 +128,13 @@ class ConsultasRepositorio(BaseRepositorio):
         self._cursor.execute("""
             SELECT m.codigo, m.fecha, i.nombre AS insumo,
                    CONCAT(m.cantidad,' ',u.abreviatura) AS cantidad,
-                   tm.nombre AS tipo_merma, m.motivo
+                   tm.nombre AS tipo_merma, m.motivo,
+                   COALESCE(CONCAT(e.nombrePila,' ',e.primApell), 'Sin asignar') AS barista
             FROM merma m
             INNER JOIN insumo i        ON m.insumo = i.codigo
             INNER JOIN unidad_medida u ON i.unidad = u.codigo
             INNER JOIN tipo_merma tm   ON m.tipo   = tm.codigo
+            LEFT JOIN empleado e       ON m.idEmpleado = e.num
             WHERE m.fecha >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
             ORDER BY m.fecha DESC, m.codigo DESC
         """)
@@ -89,11 +144,13 @@ class ConsultasRepositorio(BaseRepositorio):
         self._cursor.execute("""
             SELECT m.codigo, m.fecha, i.nombre AS insumo,
                    CONCAT(m.cantidad,' ',u.abreviatura) AS cantidad,
-                   tm.nombre AS tipo_merma, m.motivo
+                   tm.nombre AS tipo_merma, m.motivo,
+                   COALESCE(CONCAT(e.nombrePila,' ',e.primApell), 'Sin asignar') AS barista
             FROM merma m
             INNER JOIN insumo i        ON m.insumo = i.codigo
             INNER JOIN unidad_medida u ON i.unidad = u.codigo
             INNER JOIN tipo_merma tm   ON m.tipo   = tm.codigo
+            LEFT JOIN empleado e       ON m.idEmpleado = e.num
             WHERE m.codigo = %s
         """, (folio,))
         return self._cursor.fetchone()

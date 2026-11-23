@@ -2,8 +2,8 @@ from datetime import datetime
 from decimal import Decimal
 from mysql.connector import Error
 from config.database import transaccion
-from config.reglas import IVA_FRONTERA
-from entidades.base import StockInsuficienteError
+from config.negocio import TASA_IVA
+from entidades.base import StockInsuficienteError, ValidacionError
 from repositorios.venta_repositorios import VentaRepositorio
 from repositorios.producto_repositorio import ProductoRepositorio
 from repositorios.insumo_repositorio import InsumoRepositorio
@@ -27,6 +27,11 @@ class VentaServicio:
                 for item in carrito.items.values():
                     prod = item["producto"]
                     cant = Decimal(str(item["cantidad"]))
+                    if not prod_repo.es_vendible(prod.codigo):
+                        raise ValidacionError(
+                            f"El producto '{prod.nombre}' ya no esta activo "
+                            "o no tiene insumos en su receta."
+                        )
                     receta = prod_repo.obtener_receta(prod.codigo)
                     for ing in receta:
                         cod_ins = ing["insumo_codigo"]
@@ -56,9 +61,10 @@ class VentaServicio:
                 for item in carrito.items.values():
                     prod = item["producto"]
                     cant = item["cantidad"]
-                    sub = round(prod.precio * cant, 2)
-                    iva = round(sub * IVA_FRONTERA, 2)
-                    tot_linea = round(sub + iva, 2)
+                    # El precio ya incluye IVA: el importe de la linea es el total y el subtotal se desglosa.
+                    tot_linea = round(prod.precio * cant, 2)
+                    sub = round(tot_linea / (1 + TASA_IVA), 2)
+                    iva = round(tot_linea - sub, 2)
                     venta_repo.insertar_linea(
                         folio, prod.codigo, cant, prod.precio, sub, iva, tot_linea
                     )
@@ -72,8 +78,11 @@ class VentaServicio:
                 # 5. Sincronizar estatus de productos
                 InventarioServicio.sincronizar_estatus_productos(cursor)
 
+            carrito.fecha_venta = fecha_actual  # misma fecha que se guardo en la BD
             return True, f"Venta #{folio} registrada.", folio
         except StockInsuficienteError as e:
+            return False, str(e), None
+        except ValidacionError as e:
             return False, str(e), None
         except Error as e:
             return False, f"Error en venta: {str(e)}", None

@@ -3,6 +3,7 @@ from mysql.connector import Error
 from config.database import transaccion
 from config.reglas import ESTATUS_ACTIVO, ESTATUS_NO_DISPONIBLE
 from entidades.base import EntidadBase, ValidacionError
+from repositorios.catalogos_repositorio import CatalogosRepositorio
 from repositorios.insumo_repositorio import InsumoRepositorio
 from repositorios.producto_repositorio import ProductoRepositorio
 
@@ -30,6 +31,36 @@ class InventarioServicio:
         with transaccion(dictionary=True) as cursor:
             repo = InsumoRepositorio(cursor)
             return repo.listar_todos()
+
+    def obtener_stock_general(self):
+        with transaccion(dictionary=True) as cursor:
+            repo = InsumoRepositorio(cursor)
+            return repo.obtener_stock_general()
+
+    def obtener_detalle_stock(self, cod_insumo):
+        with transaccion(dictionary=True) as cursor:
+            repo = InsumoRepositorio(cursor)
+            return repo.obtener_detalle_stock(cod_insumo)
+
+    def obtener_insumos_mesa(self):
+        with transaccion(dictionary=True) as cursor:
+            repo = InsumoRepositorio(cursor)
+            return repo.obtener_insumos_mesa()
+
+    def obtener_insumos_receta(self):
+        with transaccion(dictionary=True) as cursor:
+            repo = InsumoRepositorio(cursor)
+            return repo.obtener_insumos_receta()
+
+    def listar_unidades_medida(self):
+        with transaccion(dictionary=True) as cursor:
+            repo = CatalogosRepositorio(cursor)
+            return repo.listar_unidades_medida()
+
+    def listar_categorias_insumo(self):
+        with transaccion(dictionary=True) as cursor:
+            repo = CatalogosRepositorio(cursor)
+            return repo.listar_categorias_insumo()
 
     def obtener_alertas_stock_bajo(self):
         with transaccion(dictionary=True) as cursor:

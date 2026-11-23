@@ -48,7 +48,7 @@ class EmpleadoRepositorio(BaseRepositorio):
     def listar_todos(self):
         self._cursor.execute("""
             SELECT e.num, CONCAT(e.nombrePila, ' ', e.primApell) AS nombre,
-                   e.correo, r.nombre AS rol, e.activo
+                   e.RFC AS rfc, e.correo, r.nombre AS rol, e.activo
             FROM empleado e
             INNER JOIN rol r ON e.rol = r.codigo
             ORDER BY e.num

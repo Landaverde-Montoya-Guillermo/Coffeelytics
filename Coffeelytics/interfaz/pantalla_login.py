@@ -1,8 +1,8 @@
 from interfaz.estilos import Color
 from consola_ui import (
     limpiar_pantalla, pausar, imprimir_encabezado_sesion,
-    pedir_contrasena, imprimir_caja_credenciales, imprimir_banner,
-    _imprimir_guia, _input_centrado, _ancho, _prefijo
+    pedir_contrasena, pedir_correo, imprimir_caja_credenciales,
+    imprimir_banner, _ancho, _prefijo, OperacionCancelada
 )
 
 
@@ -24,20 +24,19 @@ class PantallaLogin:
                 pfx = _prefijo(_ancho())
                 print(f"\n{pfx}  {mensaje}\n")
 
-            _imprimir_guia(
-                "Correo electronico registrado en el sistema",
-                "usuario@dominio.com (sin espacios)",
-                "admin@coffeelytics.com",
-                "Las credenciales se verifican contra la base de datos MySQL."
-            )
-            correo = _input_centrado("Correo electronico")
-            if correo.strip().lower() in ("salir", "0"):
+            try:
+                correo = pedir_correo(aceptar_salir=True)
+                contra = pedir_contrasena("Contrasena (0/CANCELAR para volver): ")
+                empleado = self.auth_servicio.iniciar_sesion(correo, contra)
+            except OperacionCancelada:
+                print(Color.aviso("Operacion cancelada."))
+                pausar()
                 return None
+            except Exception as error:
+                print(Color.error(str(error)))
+                pausar()
+                continue
 
-            correo = correo.strip().lower()
-            contra = pedir_contrasena("Contrasena: ")
-
-            empleado = self.auth_servicio.iniciar_sesion(correo, contra)
             if empleado:
                 return empleado
 
