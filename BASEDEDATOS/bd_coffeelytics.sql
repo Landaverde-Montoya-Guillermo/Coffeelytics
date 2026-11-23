@@ -1,4 +1,4 @@
--- Active: 1795140631459@@127.0.0.1@3306@bd_coffeelytics
+-- Active: 1794535651012@@127.0.0.1@3306@bd_coffeelytics
 -- ============================================================================
 -- ARCHIVO: bd_coffeelytics.sql
 -- UBICACIÓN: coffeelytics/bd_coffeelytics.sql
@@ -382,9 +382,3 @@ INSERT INTO merma (motivo, fecha, cantidad, tipo, insumo) VALUES
 ('Leche derramada en barra', DATE_SUB(CURDATE(), INTERVAL 2 DAY), 200.00, 'TM001', 'INS002'),
 ('Galleta vencida de lote anterior', DATE_SUB(CURDATE(), INTERVAL 3 DAY), 2.00, 'TM002', 'INS006'),
 ('Jarabe de calabaza derramado', DATE_SUB(CURDATE(), INTERVAL 3 DAY), 40.00, 'TM001', 'INS004');
-
-DELETE FROM rec_insum WHERE receta IN (
-    SELECT codigo FROM receta WHERE producto IN ('GLLT','GLLTS')
-);
-DELETE FROM receta WHERE producto IN ('GLLT','GLLTS');
-DELETE FROM producto WHERE codigo IN ('GLLT','GLLTS');
