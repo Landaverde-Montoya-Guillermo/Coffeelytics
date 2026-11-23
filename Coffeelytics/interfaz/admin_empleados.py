@@ -1,4 +1,5 @@
 from interfaz.estilos import Color
+from consola_ui import tabla_centrada
 from consola_ui import (
     limpiar_pantalla, pausar, seleccionar_con_flechas,
     imprimir_encabezado_sesion, imprimir_tabla,
@@ -38,6 +39,7 @@ class AdminEmpleados:
                 self.usuario,
                 breadcrumb=["Inicio", "Panel Admin", "Gestion de Empleados"]
             )
+            enc = "\n".join([enc, self._tabla_personal()])
             idx = seleccionar_con_flechas("GESTION DE EMPLEADOS", opciones, enc)
             ultima = len(opciones) - 1
             if idx == ultima:
@@ -51,6 +53,14 @@ class AdminEmpleados:
                     self._crear_empleado(forzar_barista=True)
             elif idx == 2 and es_principal:
                 self._desactivar_empleado()
+
+    def _tabla_personal(self):
+        """Tabla centrada del personal registrado (para evitar correos e IDs duplicados)."""
+        empleados = self.empleado_srv.listar_empleados()
+        cols = ["ID", "NOMBRE", "CORREO", "ROL", "ESTATUS"]
+        filas = [(e["num"], e["nombre"], e["correo"], e["rol"],
+                  "ACTIVO" if e["activo"] else "INACTIVO") for e in empleados]
+        return tabla_centrada("PERSONAL REGISTRADO ACTUALMENTE", cols, filas)
 
     def _listar_empleados(self):
         empleados = self.empleado_srv.listar_empleados()
@@ -77,9 +87,10 @@ class AdminEmpleados:
         ))
         pfx = _prefijo(_ancho())
         print(f"\n{pfx}  {Color.titulo('ALTA DE NUEVO EMPLEADO')}\n")
+        print(self._tabla_personal())
         print(Color.info("Completa los datos del nuevo colaborador."))
         if forzar_barista:
-            print(Color.aviso("[!] Como Admin Secundario solo puedes crear cuentas de Barista."))
+            print(Color.aviso("Como Admin Secundario solo puedes crear cuentas de Barista."))
         print()
         try:
             empleados_existentes = self.empleado_srv.listar_empleados()

@@ -1,6 +1,7 @@
 from consola_ui import (
     seleccionar_con_flechas,
     imprimir_encabezado_sesion,
+    ejecutar_accion,
 )
 from entidades.carrito_venta import CarritoVenta
 from interfaz.barista_catalogo import BaristaCatalogo
@@ -46,13 +47,21 @@ class PantallaBarista:
             )
             idx = seleccionar_con_flechas("MENU BARISTA", opciones, enc)
             if idx == 0:
-                catalogo_ui.catalogo_productos()
+                ejecutar_accion(catalogo_ui.catalogo_productos)
             elif idx == 1:
+<<<<<<< HEAD
                 operaciones_ui.registrar_merma()
             elif idx == 2:
                 operaciones_ui.surtir_mesa()
             elif idx == 3:
                 if operaciones_ui.desactivar_mi_cuenta():
+=======
+                ejecutar_accion(operaciones_ui.registrar_merma)
+            elif idx == 2:
+                ejecutar_accion(operaciones_ui.surtir_mesa)
+            elif idx == 3:
+                if ejecutar_accion(operaciones_ui.desactivar_mi_cuenta):
+>>>>>>> 65287f2 (Programa completo)
                     return
             elif idx == 4:
                 return

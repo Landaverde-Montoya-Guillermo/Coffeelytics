@@ -37,6 +37,46 @@ class ProductoRepositorio(BaseRepositorio):
               )
             ORDER BY p.codigo
         """, (cod_categoria, ESTATUS_ACTIVO))
+<<<<<<< HEAD
+=======
+        return [
+            Producto(f["codigo"], f["nombre"], f["precio"],
+                     f["estatus"], f["cat_cod"], f["cat_nom"])
+            for f in self._cursor.fetchall()
+        ]
+
+    def es_vendible(self, cod_producto):
+        self._cursor.execute("""
+            SELECT 1
+            FROM producto p
+            WHERE p.codigo = %s
+              AND p.estatus = %s
+              AND EXISTS (
+                  SELECT 1
+                  FROM receta r
+                  INNER JOIN rec_insum ri ON ri.receta = r.codigo
+                  WHERE r.producto = p.codigo
+              )
+        """, (cod_producto, ESTATUS_ACTIVO))
+        return self._cursor.fetchone() is not None
+
+    def obtener_catalogo_vendible(self):
+        """Todos los productos activos con receta y insumos, de todas las categorias."""
+        self._cursor.execute("""
+            SELECT p.codigo, p.nombre, p.precio, p.estatus,
+                   c.codigo AS cat_cod, c.nombre AS cat_nom
+            FROM producto p
+            INNER JOIN categoria_producto c ON p.categoria = c.codigo
+            WHERE p.estatus = %s
+              AND EXISTS (
+                  SELECT 1
+                  FROM receta r
+                  INNER JOIN rec_insum ri ON ri.receta = r.codigo
+                  WHERE r.producto = p.codigo
+              )
+            ORDER BY p.nombre
+        """, (ESTATUS_ACTIVO,))
+>>>>>>> 65287f2 (Programa completo)
         return [
             Producto(f["codigo"], f["nombre"], f["precio"],
                      f["estatus"], f["cat_cod"], f["cat_nom"])

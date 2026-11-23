@@ -1,0 +1,25 @@
+╔══════════════════════════════════════════════════════════╗
+║              COFFEELYTICS - PUNTO DE VENTA               ║
+║               COMPROBANTE OFICIAL DE VENTA               ║
+╠══════════════════════════════════════════════════════════╣
+║ Folio de venta:     #00028                               ║
+║ Fecha y hora:       2026-11-22 14:05:15                  ║
+║ Atendido por:       Cristian Gomez                       ║
+║ Cliente:            Luisillo                             ║
+╟──────────────────────────────────────────────────────────╢
+║ CANT │ PRODUCTO                  │    P.UNIT │   IMPORTE ║
+║ ─────┼───────────────────────────┼───────────┼────────── ║
+║    2 │ Latte Vainilla            │    $65.00 │   $130.00 ║
+╟──────────────────────────────────────────────────────────╢
+║                           Subtotal:              $130.00 ║
+║                           IVA (8%):               $10.40 ║
+║                           TOTAL A PAGAR:         $140.40 ║
+╟──────────────────────────────────────────────────────────╢
+║ Metodo de pago:     Efectivo                             ║
+║ Efectivo recibido:  $198.00                              ║
+║ Cambio entregado:   $57.60                               ║
+╟──────────────────────────────────────────────────────────╢
+║                Gracias por su preferencia                ║
+║                  Respaldo guardado en:                   ║
+║          documentos/salida/Ticket_Venta_28.txt           ║
+╚══════════════════════════════════════════════════════════╝

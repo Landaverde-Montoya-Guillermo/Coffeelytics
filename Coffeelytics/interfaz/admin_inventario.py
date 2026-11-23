@@ -1,11 +1,16 @@
+import shutil
+
 from interfaz.estilos import Color
+from consola_ui import tabla_centrada
 from consola_ui import (
     limpiar_pantalla, pausar, seleccionar_con_flechas,
     imprimir_encabezado_sesion, imprimir_tabla,
     pedir_codigo, pedir_nombre_propio,
     pedir_numero_positivo, pedir_precio,
-    _imprimir_guia, _input_centrado, _ancho, _prefijo, OperacionCancelada
+    _imprimir_guia, _input_centrado, _ancho, _prefijo, OperacionCancelada,
+    imprimir_bloque_centrado, _centrar_texto
 )
+from documentos.generador_documentos import lineas_comprobante_compra, ancho_comprobante
 
 
 class AdminInventario:
@@ -112,10 +117,27 @@ class AdminInventario:
             f"Stock: {insumo['stockActual']} {insumo['unidad']}"
             for insumo in insumos
         ] + ["<< Volver"]
+<<<<<<< HEAD
         enc = imprimir_encabezado_sesion(
             self.usuario,
             breadcrumb=["Inicio", "Panel Admin", "Inventario", "Stock individual"]
         )
+=======
+        # Tabla completa de existencias antes de pedir el insumo a consultar.
+        cols = ["CODIGO", "INSUMO", "CATEGORIA", "STOCK ACTUAL", "STOCK MIN", "UNIDAD", "ESTADO"]
+        filas = [
+            (i["codigo"], i["nombre"], i["categoria"], i["stockActual"], i["stockMin"], i["unidad"],
+             "[BAJO]" if i["stockActual"] <= i["stockMin"] else "Suficiente")
+            for i in insumos
+        ]
+        enc = "\n".join([
+            imprimir_encabezado_sesion(
+                self.usuario,
+                breadcrumb=["Inicio", "Panel Admin", "Inventario", "Stock individual"]
+            ),
+            tabla_centrada("EXISTENCIAS ACTUALES DEL INVENTARIO", cols, filas),
+        ])
+>>>>>>> 65287f2 (Programa completo)
         idx = seleccionar_con_flechas("SELECCIONA UN INSUMO", opciones, enc)
         if idx == len(insumos):
             return
@@ -192,10 +214,23 @@ class AdminInventario:
 
         while True:
             try:
+<<<<<<< HEAD
                 enc = imprimir_encabezado_sesion(
                     self.usuario,
                     breadcrumb=["Inicio", "Panel Admin", "Registrar Compra", "Insumo"]
                 )
+=======
+                filas_ins = [(i["codigo"], i["nombre"], i["stockActual"], i["abreviatura"])
+                             for i in insumos]
+                enc = "\n".join([
+                    imprimir_encabezado_sesion(
+                        self.usuario,
+                        breadcrumb=["Inicio", "Panel Admin", "Registrar Compra", "Insumo"]
+                    ),
+                    tabla_centrada("INSUMOS DEL CATALOGO", ["CODIGO", "INSUMO", "STOCK ACTUAL", "UNIDAD"],
+                                   filas_ins),
+                ])
+>>>>>>> 65287f2 (Programa completo)
                 opts2 = [f"{i['codigo']:<12} {i['nombre']:<30} Stock: {i['stockActual']} {i['abreviatura']}"
                          for i in insumos] + ["<< Cancelar y regresar"]
                 idx2 = seleccionar_con_flechas("Selecciona insumo a comprar", opts2, enc)
@@ -250,7 +285,11 @@ class AdminInventario:
                   f"Total: {Color.CARAMELO}${total:.2f}{Color.RESET}")
 
             metodos = [("EFEC", "Efectivo"), ("TARJ", "Tarjeta"),
+<<<<<<< HEAD
                        ("SPEI", "Transferencia SPEI")]
+=======
+                       ("TRAN", "Transferencia Electronica")]
+>>>>>>> 65287f2 (Programa completo)
             enc3 = imprimir_encabezado_sesion(
                 self.usuario,
                 breadcrumb=["Inicio", "Panel Admin", "Registrar Compra", "Metodo de pago"]
@@ -270,16 +309,29 @@ class AdminInventario:
 
         while True:
             try:
+<<<<<<< HEAD
                 ok, msg = self.compra_srv.registrar_compra_proveedor(
                     prov["codigo"], ins["codigo"], cantidad, precio_unit,
                     cod_pago, self.usuario.num
+=======
+                ok, msg, datos = self.compra_srv.registrar_compra_proveedor(
+                    prov["codigo"], ins["codigo"], cantidad, precio_unit,
+                    cod_pago, self.usuario.num,
+                    autorizo=self.usuario.nombre_completo,
+                    unidad=ins["abreviatura"]
+>>>>>>> 65287f2 (Programa completo)
                 )
             except Exception as error:
                 print(Color.error(str(error)))
                 pausar()
                 return
             if ok:
+<<<<<<< HEAD
                 print(Color.ok(msg))
+=======
+                metodo_desc = next(desc for cod, desc in metodos if cod == cod_pago)
+                self._mostrar_comprobante_compra(datos, metodo_desc)
+>>>>>>> 65287f2 (Programa completo)
                 pausar()
                 return
             print(Color.error(msg))
@@ -332,6 +384,34 @@ class AdminInventario:
                     break
                 continue
             return
+<<<<<<< HEAD
+=======
+
+    def _mostrar_comprobante_compra(self, datos, metodo_desc):
+        """
+        Guarda el respaldo .txt y dibuja el COMPROBANTE DE COMPRA centrado en consola.
+        Si el .txt no se puede guardar, el comprobante se muestra igual con un aviso.
+        """
+        datos["metodo"] = metodo_desc
+        aviso = None
+        try:
+            self.reportes.guardar_comprobante_compra_txt(datos)
+        except Exception as error:
+            datos["respaldo"] = None
+            aviso = f"No se pudo guardar el respaldo .txt: {error}"
+
+        limpiar_pantalla()
+        print(imprimir_encabezado_sesion(
+            self.usuario,
+            breadcrumb=["Inicio", "Panel Admin", "Registrar Compra", "Comprobante"]
+        ))
+        print()
+        columnas = shutil.get_terminal_size(fallback=(80, 24)).columns
+        imprimir_bloque_centrado(lineas_comprobante_compra(datos, ancho_comprobante(columnas)))
+        if aviso:
+            print(_centrar_texto(Color.aviso(aviso)))
+        print()
+>>>>>>> 65287f2 (Programa completo)
 
     def registrar_insumo(self):
         limpiar_pantalla()

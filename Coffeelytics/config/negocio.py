@@ -1,3 +1,8 @@
+# IVA de las ventas en Tijuana. Los precios del catalogo YA INCLUYEN este impuesto:
+# el total se toma directo del precio y el subtotal/IVA se desglosan hacia atras
+# (subtotal = total / (1 + TASA_IVA)). Solo se usa para guardar datos y para el corte.
+TASA_IVA = 0.08
+
 INFO_CAFETERIA = {
     "nombre": "COFFEELYTICS",
     "eslogan": "Control inteligente de inventarios",

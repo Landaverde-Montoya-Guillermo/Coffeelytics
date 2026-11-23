@@ -25,6 +25,51 @@ class ReporteServicio:
                 "ganancia_bruta": round(ingresos - gastos, 2)
             }
 
+    def obtener_corte_dia(self):
+        """
+        Corte de caja del dia: ventas por metodo de pago, gran total y efectivo esperado
+        (total de ventas con metodo EFEC). Importes en float para el comprobante.
+        """
+        with transaccion(dictionary=True) as cursor:
+            repo = ConsultasRepositorio(cursor)
+            filas = repo.ventas_del_dia_por_metodo()
+
+        metodos = []
+        esperado = 0.0
+        for f in filas:
+            fila = {
+                "metodo": f["metodo"],
+                "operaciones": int(f["operaciones"]),
+                "subtotal": float(f["subtotal"]),
+                "iva": float(f["iva"]),
+                "total": float(f["total"]),
+            }
+            metodos.append(fila)
+            if f["codigo"] == "EFEC":
+                esperado = fila["total"]
+
+        gran = {
+            "operaciones": sum(m["operaciones"] for m in metodos),
+            "subtotal": round(sum(m["subtotal"] for m in metodos), 2),
+            "iva": round(sum(m["iva"] for m in metodos), 2),
+            "total": round(sum(m["total"] for m in metodos), 2),
+        }
+        return {"metodos": metodos, "gran": gran, "esperado": round(esperado, 2)}
+
+    def resumen_ventas_por_barista(self):
+        with transaccion(dictionary=True) as cursor:
+            repo = ConsultasRepositorio(cursor)
+            filas = repo.ventas_por_barista()
+        return [{"id": f["id"], "barista": f["barista"],
+                 "tickets": int(f["tickets"]), "total": float(f["total"])} for f in filas]
+
+    def detalle_ventas_barista(self, num_empleado):
+        with transaccion(dictionary=True) as cursor:
+            repo = ConsultasRepositorio(cursor)
+            filas = repo.ventas_de_barista(num_empleado)
+        return [{"folio": f["folio"], "fecha": f["fecha"], "cliente": f["cliente"],
+                 "metodo": f["metodo"], "total": float(f["total"])} for f in filas]
+
     def listar_ventas_recientes(self, limite=20):
         with transaccion(dictionary=True) as cursor:
             repo = ConsultasRepositorio(cursor)

@@ -5,9 +5,12 @@ from interfaz.admin_consultas import AdminConsultas
 from interfaz.admin_empleados import AdminEmpleados
 from consola_ui import (
     limpiar_pantalla, pausar, seleccionar_con_flechas,
-    imprimir_encabezado_sesion,
-    _ancho, _prefijo
+    imprimir_encabezado_sesion, ejecutar_accion,
+    _ancho, _prefijo, _columnas, formatear_bloque_centrado
 )
+from documentos.caja_texto import Caja
+
+MAX_ALERTAS_MOSTRADAS = 5  # Lineas de detalle en la caja de alerta del menu principal.
 
 
 def _es_admin_principal(usuario):
@@ -63,7 +66,7 @@ class PantallaAdmin:
             "Registrar compra a proveedor",
             "Registrar nuevo insumo",
             f"Asignar insumo a receta de producto{marca}",
-            f"Alta de nuevo producto / bebida festiva{marca}",
+            f"Anadir nuevo producto{marca}",
             "Consultas de reportes (exportar .txt)",
             "Gestion de empleados (CRUD)",
             "<< Cerrar sesion y volver al Inicio",
@@ -73,37 +76,95 @@ class PantallaAdmin:
                 self.usuario,
                 breadcrumb=["Inicio", "Panel Admin"]
             )
-            idx = seleccionar_con_flechas("MENU ADMINISTRADOR", opciones, enc)
+            # La alerta preventiva va arriba del encabezado; se recalcula en cada redibujado.
+            alerta = self._caja_alertas_stock()
+            encabezado = "\n".join(parte for parte in (alerta, enc) if parte)
+            idx = seleccionar_con_flechas("MENU ADMINISTRADOR", opciones, encabezado)
             if idx == 0:
-                self._alertas_stock()
+                ejecutar_accion(self._alertas_stock)
             elif idx == 1:
+<<<<<<< HEAD
                 self._consultar_stock()
+=======
+                ejecutar_accion(self._consultar_stock)
+>>>>>>> 65287f2 (Programa completo)
             elif idx == 2:
                 if not es_principal:
                     _acceso_denegado()
                 else:
+<<<<<<< HEAD
                     self._resumen_financiero()
             elif idx == 3:
                 self._registrar_compra()
             elif idx == 4:
                 self._registrar_insumo()
+=======
+                    ejecutar_accion(self._resumen_financiero)
+            elif idx == 3:
+                ejecutar_accion(self._registrar_compra)
+            elif idx == 4:
+                ejecutar_accion(self._registrar_insumo)
+>>>>>>> 65287f2 (Programa completo)
             elif idx == 5:
                 if not es_principal:
                     _acceso_denegado()
                 else:
+<<<<<<< HEAD
                     self._asignar_insumo_receta()
+=======
+                    ejecutar_accion(self._asignar_insumo_receta)
+>>>>>>> 65287f2 (Programa completo)
             elif idx == 6:
                 if not es_principal:
                     _acceso_denegado()
                 else:
+<<<<<<< HEAD
                     self._alta_producto()
             elif idx == 7:
                 self._menu_consultas()
             elif idx == 8:
                 self._gestion_empleados()
+=======
+                    ejecutar_accion(self._alta_producto)
+            elif idx == 7:
+                ejecutar_accion(self._menu_consultas)
+            elif idx == 8:
+                ejecutar_accion(self._gestion_empleados)
+>>>>>>> 65287f2 (Programa completo)
             elif idx == 9:
                 return
             
+    def _caja_alertas_stock(self):
+        """
+        Caja de alerta preventiva con los insumos en nivel critico o agotados (stockActual <= stockMin).
+        Devuelve "" si no hay alertas. Si la consulta falla, muestra un aviso sin bloquear el menu.
+        """
+        try:
+            alertas = self.inventario_srv.obtener_alertas_stock_bajo()
+        except Exception as error:
+            return formatear_bloque_centrado([(f"[!] No se pudo consultar el stock: {error}", "aviso")])
+        if not alertas:
+            return ""
+
+        ancho = max(44, min(72, _columnas() - 4))
+        c = Caja(ancho)
+        c.marco("╔", "═", "╗")
+        c.texto("[!] ALERTA PREVENTIVA DE STOCK", "aviso", "c")
+        c.texto(f"{len(alertas)} insumo(s) por reabastecer", None, "c")
+        c.marco("╟", "─", "╢")
+        for a in alertas[:MAX_ALERTAS_MOSTRADAS]:
+            actual = float(a["stockActual"])
+            minimo = float(a["stockMin"])
+            unidad = a.get("abreviatura") or ""
+            etiqueta = "[X] AGOTADO" if actual <= 0 else "[!] CRITICO"
+            c.texto(f"{etiqueta}  {a['nombre']}")
+            c.texto(f"    Stock actual: {actual:g} {unidad}   Minimo: {minimo:g} {unidad}")
+        restantes = len(alertas) - MAX_ALERTAS_MOSTRADAS
+        if restantes > 0:
+            c.texto(f"... y {restantes} insumo(s) mas. Revisa 'Alertas de stock bajo'.", "dim", "c")
+        c.marco("╚", "═", "╝")
+        return formatear_bloque_centrado(c.resultado())
+
     def _alertas_stock(self):
         self.inventario_ui.alertas_stock()
 

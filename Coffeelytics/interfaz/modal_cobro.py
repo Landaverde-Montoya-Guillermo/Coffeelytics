@@ -1,10 +1,15 @@
+import shutil
+
 from config.negocio import INFO_CAFETERIA
 from interfaz.estilos import Color
+from documentos.generador_documentos import lineas_ticket, ancho_ticket
+from interfaz.visor_cliente import renderizar_visor_coffeelytics
 from consola_ui import (
     limpiar_pantalla, pausar, seleccionar_con_flechas,
     imprimir_encabezado_sesion, pedir_nombre_cliente,
     pedir_monto_efectivo, _imprimir_guia, _input_centrado,
-    _ancho, _prefijo, OperacionCancelada
+    _ancho, _prefijo, OperacionCancelada,
+    imprimir_bloque_centrado, _centrar_texto
 )
 
 
@@ -16,8 +21,13 @@ class ModalCobro:
         self.reportes = reportes
 
     def procesar(self):
-        """Procesa el pago y delega al servicio el guardado. Devuelve True si se cobro."""
+        """Procesa el pago, guarda la venta y muestra el ticket. Devuelve True si se cobro."""
         limpiar_pantalla()
+<<<<<<< HEAD
+=======
+        recibido = None
+        cambio = 0.0
+>>>>>>> 65287f2 (Programa completo)
         try:
             enc = imprimir_encabezado_sesion(
                 self.usuario,
@@ -26,7 +36,12 @@ class ModalCobro:
             print(enc)
             pfx = _prefijo(_ancho())
             total_venta = self.carrito.calcular_total()
+<<<<<<< HEAD
             print(f"\n{pfx}  Total a cobrar: {Color.CARAMELO}{Color.BOLD}${total_venta:.2f}{Color.RESET}\n")
+=======
+            print(renderizar_visor_coffeelytics(self.carrito, ultimo_evento="LISTO PARA COBRAR"))
+            print()
+>>>>>>> 65287f2 (Programa completo)
 
             while True:
                 try:
@@ -39,12 +54,24 @@ class ModalCobro:
             metodos = [
                 ("EFEC", "Efectivo"),
                 ("TARJ", "Tarjeta bancaria"),
+<<<<<<< HEAD
                 ("SPEI", "Transferencia SPEI"),
             ]
             enc2 = imprimir_encabezado_sesion(
                 self.usuario,
                 breadcrumb=["Inicio", "Panel Barista", "Nueva Venta", "Carrito", "Cobro", "Metodo de pago"]
             )
+=======
+                ("TRAN", "Transferencia Electronica"),
+            ]
+            enc2 = "\n".join([
+                imprimir_encabezado_sesion(
+                    self.usuario,
+                    breadcrumb=["Inicio", "Panel Barista", "Nueva Venta", "Carrito", "Cobro", "Metodo de pago"]
+                ),
+                renderizar_visor_coffeelytics(self.carrito, ultimo_evento="LISTO PARA COBRAR"),
+            ])
+>>>>>>> 65287f2 (Programa completo)
             opciones_pago = [m[1] for m in metodos] + ["<< Cancelar cobro"]
             idx_m = seleccionar_con_flechas("Metodo de pago", opciones_pago, enc2)
             if idx_m == len(metodos):
@@ -53,17 +80,27 @@ class ModalCobro:
                 return False
             cod_pago, desc_pago = metodos[idx_m]
 
+<<<<<<< HEAD
             cambio = 0.0
+=======
+>>>>>>> 65287f2 (Programa completo)
             if cod_pago == "EFEC":
                 limpiar_pantalla()
                 print(imprimir_encabezado_sesion(
                     self.usuario,
                     breadcrumb=["Inicio", "Panel Barista", "Nueva Venta", "Cobro", "Efectivo"]
                 ))
+<<<<<<< HEAD
                 print(f"\n{pfx}  Total: {Color.CARAMELO}{Color.BOLD}${total_venta:.2f}{Color.RESET}")
                 while True:
                     try:
                         _, cambio = pedir_monto_efectivo(total_venta)
+=======
+                print(renderizar_visor_coffeelytics(self.carrito, ultimo_evento="LISTO PARA COBRAR"))
+                while True:
+                    try:
+                        recibido, cambio = pedir_monto_efectivo(total_venta)
+>>>>>>> 65287f2 (Programa completo)
                         break
                     except ValueError as error:
                         print(Color.error(str(error)))
@@ -80,7 +117,11 @@ class ModalCobro:
                 )
                 if confirmacion.strip().upper() in ("0", "CANCELAR"):
                     raise OperacionCancelada()
+<<<<<<< HEAD
             elif cod_pago == "SPEI":
+=======
+            elif cod_pago == "TRAN":
+>>>>>>> 65287f2 (Programa completo)
                 _imprimir_guia(
                     "Pago por Transferencia SPEI",
                     "El cliente transfiere a la CLABE indicada y presiona ENTER para confirmar",
@@ -117,15 +158,49 @@ class ModalCobro:
             pausar()
             return False
 
+<<<<<<< HEAD
         print(Color.ok(msg))
+=======
+        # Venta registrada en MySQL: se construye el comprobante antes de vaciar el carrito.
+        datos = self.reportes.datos_ticket(
+            folio, self.carrito, desc_pago, self.usuario,
+            recibido=recibido, cambio=cambio
+        )
+        aviso_respaldo = None
+        try:
+            self.reportes.guardar_ticket_txt(datos)
+        except Exception as error:
+            datos["respaldo"] = None
+            aviso_respaldo = f"No se pudo guardar el respaldo .txt: {error}"
+>>>>>>> 65287f2 (Programa completo)
         try:
             self.reportes.ticket_venta(
                 folio, self.carrito, desc_pago, self.usuario, cambio
             )
         except Exception as error:
+<<<<<<< HEAD
             print(Color.error(
                 f"La venta se registro, pero no se pudo generar el ticket: {error}"
             ))
         self.carrito.vaciar()
         pausar()
         return True
+=======
+            aviso_respaldo = aviso_respaldo or f"No se pudo generar el PDF: {error}"
+
+        limpiar_pantalla()
+        print(imprimir_encabezado_sesion(
+            self.usuario,
+            breadcrumb=["Inicio", "Panel Barista", "Nueva Venta", "Cobro", "Ticket"]
+        ))
+        print()
+        columnas = shutil.get_terminal_size(fallback=(80, 24)).columns
+        imprimir_bloque_centrado(lineas_ticket(datos, ancho_ticket(columnas)))
+        if aviso_respaldo:
+            print(_centrar_texto(Color.aviso(aviso_respaldo)))
+        print()
+        pausar("Presiona ENTER para continuar y volver al menu...")
+
+        self.carrito.vaciar()
+        return True
+>>>>>>> 65287f2 (Programa completo)

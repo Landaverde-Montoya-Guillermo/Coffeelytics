@@ -1,5 +1,6 @@
 
 from interfaz.estilos import Color
+from consola_ui import tabla_centrada
 from consola_ui import (
     limpiar_pantalla, pausar, seleccionar_con_flechas,
     imprimir_encabezado_sesion, imprimir_tabla,
@@ -20,7 +21,11 @@ class AdminProductos:
         limpiar_pantalla()
         encabezado = imprimir_encabezado_sesion(
             self.usuario,
+<<<<<<< HEAD
             breadcrumb=["Inicio", "Panel Admin", "Alta de Producto", f"Receta: {prod_nombre}"]
+=======
+            breadcrumb=["Inicio", "Panel Admin", "Anadir Producto", f"Receta: {prod_nombre}"]
+>>>>>>> 65287f2 (Programa completo)
         )
         print(encabezado)
         while True:
@@ -121,6 +126,20 @@ class AdminProductos:
             except Exception as error:
                 print(Color.error(str(error)))
                 pausar()
+<<<<<<< HEAD
+=======
+
+    def _tablas_receta(self, prod, insumos):
+        """Tablas centradas: receta actual del producto y catalogo de insumos disponibles."""
+        receta = self.producto_srv.obtener_receta(prod["codigo"])
+        filas_receta = [(r["nombre"], r["requerido"], r["abreviatura"]) for r in receta]
+        filas_cat = [(i["codigo"], i["nombre"], i["stockActual"], i["abreviatura"]) for i in insumos]
+        return "\n".join([
+            tabla_centrada("RECETA ACTUAL DEL PRODUCTO", ["INSUMO", "CANTIDAD", "UNIDAD"], filas_receta),
+            tabla_centrada("CATALOGO DE INSUMOS DISPONIBLES",
+                           ["CODIGO", "INSUMO", "STOCK ACTUAL", "UNIDAD"], filas_cat),
+        ])
+>>>>>>> 65287f2 (Programa completo)
 
     def asignar_insumo_receta(self):
         while True:
@@ -144,10 +163,20 @@ class AdminProductos:
                     return
                 prod = productos[idx]
 
+<<<<<<< HEAD
                 enc2 = imprimir_encabezado_sesion(
                     self.usuario,
                     breadcrumb=["Inicio", "Panel Admin", "Asignar Insumo a Receta", "Insumo"]
                 )
+=======
+                enc2 = "\n".join([
+                    imprimir_encabezado_sesion(
+                        self.usuario,
+                        breadcrumb=["Inicio", "Panel Admin", "Asignar Insumo a Receta", "Insumo"]
+                    ),
+                    self._tablas_receta(prod, insumos),
+                ])
+>>>>>>> 65287f2 (Programa completo)
                 opts2 = [f"{i['codigo']:<12} {i['nombre']:<30} Stock: {i['stockActual']} {i['abreviatura']}"
                          for i in insumos] + ["<< Cancelar y regresar"]
                 idx2 = seleccionar_con_flechas("Selecciona insumo a asignar a la receta", opts2, enc2)
@@ -190,6 +219,10 @@ class AdminProductos:
                         return
                     if ok:
                         print(Color.ok(msg))
+<<<<<<< HEAD
+=======
+                        print(self._tablas_receta(prod, insumos))  # receta ya refrescada
+>>>>>>> 65287f2 (Programa completo)
                         pausar()
                         break
 
@@ -266,10 +299,10 @@ class AdminProductos:
 
         enc = imprimir_encabezado_sesion(
             self.usuario,
-            breadcrumb=["Inicio", "Panel Admin", "Alta de Producto", "Categoria"]
+            breadcrumb=["Inicio", "Panel Admin", "Anadir Producto", "Categoria"]
         )
         opts = [f"{c['codigo']:<10} {c['nombre']}" for c in categorias] + ["<< Cancelar y regresar"]
-        idx = seleccionar_con_flechas("ALTA DE PRODUCTO - Selecciona categoria", opts, enc)
+        idx = seleccionar_con_flechas("ANADIR PRODUCTO - Selecciona categoria", opts, enc)
         if idx == len(categorias):
             return
         cat = categorias[idx]
@@ -277,10 +310,10 @@ class AdminProductos:
         limpiar_pantalla()
         print(imprimir_encabezado_sesion(
             self.usuario,
-            breadcrumb=["Inicio", "Panel Admin", "Alta de Producto", "Datos"]
+            breadcrumb=["Inicio", "Panel Admin", "Anadir Producto", "Datos"]
         ))
         pfx = _prefijo(_ancho())
-        print(f"\n{pfx}  {Color.titulo('ALTA DE NUEVO PRODUCTO / BEBIDA FESTIVA')}")
+        print(f"\n{pfx}  {Color.titulo('ANADIR NUEVO PRODUCTO')}")
         print(f"{pfx}  Categoria: {Color.CARAMELO}{cat['nombre']}{Color.RESET}\n")
         print(Color.info("El producto quedara con estatus Activo. Para que sea vendible debe tener receta asignada."))
         print()
@@ -378,11 +411,19 @@ class AdminProductos:
                     "<< Cancelar y regresar"
                 ]
                 idx = seleccionar_con_flechas(
+<<<<<<< HEAD
                     "ALTA DE PRODUCTO - Selecciona categoria",
                     opts,
                     imprimir_encabezado_sesion(
                         self.usuario,
                         breadcrumb=["Inicio", "Panel Admin", "Alta de Producto", "Categoria"]
+=======
+                    "ANADIR PRODUCTO - Selecciona categoria",
+                    opts,
+                    imprimir_encabezado_sesion(
+                        self.usuario,
+                        breadcrumb=["Inicio", "Panel Admin", "Anadir Producto", "Categoria"]
+>>>>>>> 65287f2 (Programa completo)
                     )
                 )
                 if idx == len(categorias):

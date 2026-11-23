@@ -1,0 +1,26 @@
+╔══════════════════════════════════════════════════════════╗
+║              COFFEELYTICS - PUNTO DE VENTA               ║
+║               COMPROBANTE OFICIAL DE VENTA               ║
+╠══════════════════════════════════════════════════════════╣
+║ Folio de venta:     #00027                               ║
+║ Fecha y hora:       2026-11-21 23:36:08                  ║
+║ Atendido por:       Cristian Gomez                       ║
+║ Cliente:            Sandra                               ║
+╟──────────────────────────────────────────────────────────╢
+║ CANT │ PRODUCTO                  │    P.UNIT │   IMPORTE ║
+║ ─────┼───────────────────────────┼───────────┼────────── ║
+║    2 │ Latte Vainilla            │    $65.00 │   $130.00 ║
+║    1 │ Capuchino Cremoso         │    $60.00 │    $60.00 ║
+╟──────────────────────────────────────────────────────────╢
+║                           Subtotal:              $190.00 ║
+║                           IVA (8%):               $15.20 ║
+║                           TOTAL A PAGAR:         $205.20 ║
+╟──────────────────────────────────────────────────────────╢
+║ Metodo de pago:     Efectivo                             ║
+║ Efectivo recibido:  $345.00                              ║
+║ Cambio entregado:   $139.80                              ║
+╟──────────────────────────────────────────────────────────╢
+║                Gracias por su preferencia                ║
+║                  Respaldo guardado en:                   ║
+║          documentos/salida/Ticket_Venta_27.txt           ║
+╚══════════════════════════════════════════════════════════╝

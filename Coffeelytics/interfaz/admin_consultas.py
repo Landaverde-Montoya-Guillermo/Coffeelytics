@@ -1,12 +1,17 @@
 import datetime
+import shutil
 from typing import Any
 from interfaz.estilos import Color
 from consola_ui import (
     limpiar_pantalla, pausar, seleccionar_con_flechas,
     imprimir_encabezado_sesion, imprimir_tabla,
-    pedir_entero_positivo, pedir_fecha,
+    pedir_entero_positivo, pedir_fecha, pedir_monto_contado,
+    imprimir_bloque_centrado, _centrar_texto,
     _ancho, _prefijo, OperacionCancelada
 )
+from config.reglas import IVA_FRONTERA
+from consola_ui import tabla_centrada
+from documentos.generador_documentos import lineas_corte_caja, ancho_comprobante
 
 
 class AdminConsultas:
@@ -24,6 +29,8 @@ class AdminConsultas:
             "C3 - Mermas",
             "C4 - Ventas por empleado y fecha",
             "C5 - Insumos de la receta de un producto",
+            "Ventas por Barista (Resumen y Detalle)",
+            "Corte de Caja del Dia (Resumen y Arqueo)",
             "<< Volver al Menu Admin",
         ]
         while True:
@@ -43,8 +50,13 @@ class AdminConsultas:
             elif idx == 4:
                 self._consulta_5()
             elif idx == 5:
+                self._ventas_por_barista()
+            elif idx == 6:
+                self._corte_caja()
+            elif idx == 7:
                 return
 
+<<<<<<< HEAD
     def _consulta_1(self):
         while True:
             limpiar_pantalla()
@@ -60,6 +72,182 @@ class AdminConsultas:
                     filas = [(v["folio"], v["fecha"], v["barista"], v["cliente"],
                               v["metodo"], f"${v['total']:.2f}") for v in ventas]
                     imprimir_tabla("Ventas recientes (ultimas 30)", cols, filas)
+                folio = pedir_entero_positivo(prompt="Numero de folio de venta", ejemplo="1")
+                enc_venta, lineas = self.reporte_srv.consulta_1_detalle_venta(folio)
+                if not enc_venta:
+                    raise ValueError("Venta no encontrada.")
+
+                limpiar_pantalla()
+                print(imprimir_encabezado_sesion(
+                    self.usuario,
+                    breadcrumb=["Inicio", "Panel Admin", "Consultas", f"Venta #{folio}"]
+                ))
+                pfx = _prefijo(_ancho())
+                print(f"\n{pfx}  {Color.titulo('DETALLE VENTA #' + str(folio))}\n")
+                print(f"{pfx}  Fecha:        {enc_venta['fecha']}")
+                print(f"{pfx}  Cliente:      {enc_venta['nombreCliente']}")
+                print(f"{pfx}  Empleado:     {enc_venta['empleado']}")
+                print(f"{pfx}  Metodo pago:  {enc_venta['metodoPago']}")
+                print(f"{pfx}  Total:        {Color.CARAMELO}${enc_venta['total']:.2f}{Color.RESET}")
+                if lineas:
+                    cols = ["Codigo", "Producto", "Precio", "Cant.", "Subtotal", "IVA", "Total"]
+                    filas = [(l["codigo"], l["nombre"], f"${l['precio']:.2f}",
+                              l["cantidad"], f"${l['subtotal']:.2f}",
+                              f"${l['totalIVA']:.2f}", f"${l['total']:.2f}") for l in lineas]
+                    imprimir_tabla("Productos vendidos", cols, filas)
+                    self.reportes.reporte_generico(
+                        f"Reporte_C1_Venta_{folio}",
+                        "DETALLE VENTA",
+                        ["Codigo", "Producto", "Precio", "Cant.", "Subtotal", "IVA", "Total"],
+                        [[l["codigo"], l["nombre"], f"${l['precio']:.2f}", l["cantidad"],
+                          f"${l['subtotal']:.2f}", f"${l['totalIVA']:.2f}", f"${l['total']:.2f}"]
+                         for l in lineas],
+                        subtitulo=f"Folio #{folio}",
+                        encabezado_extra=f"Cliente: {enc_venta['nombreCliente']}  Empleado: {enc_venta['empleado']}"
+                    )
+                else:
+                    print(Color.aviso("Esta venta no tiene productos registrados. No se genero reporte."))
+                pausar()
+                return
+            except OperacionCancelada:
+                return
+            except Exception as error:
+                print(Color.error(str(error)))
+                pausar()
+=======
+    def _tabla_ultimos_folios(self):
+        """Tabla centrada con los ultimos 15 folios registrados."""
+        ventas = self.reporte_srv.listar_ventas_recientes(15)
+        cols = ["FOLIO", "FECHA Y HORA", "BARISTA", "METODO PAGO", "TOTAL"]
+        filas = [(v["folio"], v["fecha"], v["barista"], v["metodo"], f"${v['total']:.2f}")
+                 for v in ventas]
+        return tabla_centrada("ULTIMOS 15 FOLIOS REGISTRADOS", cols, filas)
+
+    def _ventas_por_barista(self):
+        """Resumen de ventas por barista (tabla centrada) y detalle de tickets del barista elegido."""
+        while True:
+            limpiar_pantalla()
+            try:
+                resumen = self.reporte_srv.resumen_ventas_por_barista()
+            except Exception as error:
+                print(Color.error(str(error)))
+                pausar()
+                return
+            if not resumen:
+                print(_centrar_texto(Color.aviso("No hay empleados registrados.")))
+                pausar()
+                return
+            cols = ["ID", "BARISTA", "TICKETS", "TOTAL VENDIDO"]
+            filas = [(r["id"], r["barista"], r["tickets"], f"${r['total']:.2f}") for r in resumen]
+            enc = "\n".join([
+                imprimir_encabezado_sesion(
+                    self.usuario,
+                    breadcrumb=["Inicio", "Panel Admin", "Consultas", "Ventas por Barista"]
+                ),
+                tabla_centrada("VENTAS POR BARISTA", cols, filas),
+            ])
+            opts = [f"{r['id']:<5} {r['barista']:<30} Tickets: {r['tickets']}" for r in resumen]
+            opts.append("<< Volver a Consultas")
+            idx = seleccionar_con_flechas("VENTAS POR BARISTA - Selecciona barista", opts, enc)
+            if idx == len(resumen):
+                return
+            barista = resumen[idx]
+            tickets = self.reporte_srv.detalle_ventas_barista(barista["id"])
+            limpiar_pantalla()
+            print(imprimir_encabezado_sesion(
+                self.usuario,
+                breadcrumb=["Inicio", "Panel Admin", "Consultas", "Ventas por Barista", barista["barista"]]
+            ))
+            print()
+            cols_d = ["FOLIO", "FECHA Y HORA", "CLIENTE", "METODO PAGO", "TOTAL"]
+            filas_d = [(t["folio"], t["fecha"], t["cliente"], t["metodo"], f"${t['total']:.2f}")
+                       for t in tickets]
+            print(tabla_centrada(f"TICKETS DE {barista['barista']}", cols_d, filas_d))
+            pausar()
+
+    def _corte_caja(self):
+        """
+        Corte de caja del dia: resumen por metodo de pago, arqueo del efectivo fisico
+        y comprobante centrado + respaldo .txt.
+        """
+        corte = self.reporte_srv.obtener_corte_dia()
+        limpiar_pantalla()
+        print(imprimir_encabezado_sesion(
+            self.usuario,
+            breadcrumb=["Inicio", "Panel Admin", "Consultas y Reportes", "Corte de Caja"]
+        ))
+        print()
+        if not corte["metodos"]:
+            print(_centrar_texto(Color.aviso("No hay ventas registradas el dia de hoy.")))
+            pausar()
+            return
+
+        cols = ["Metodo de pago", "Oper.", "Subtotal", "IVA", "Total"]
+        filas = [
+            (m["metodo"], m["operaciones"], f"${m['subtotal']:.2f}",
+             f"${m['iva']:.2f}", f"${m['total']:.2f}")
+            for m in corte["metodos"]
+        ]
+        imprimir_tabla("VENTAS DE HOY POR METODO DE PAGO", cols, filas)
+        g = corte["gran"]
+        print(_centrar_texto(f"Gran total del dia: {Color.CARAMELO}{Color.BOLD}${g['total']:.2f}{Color.RESET}"))
+        print()
+
+        esperado = corte["esperado"]
+        while True:
+            try:
+                contado = pedir_monto_contado(esperado)
+                break
+            except OperacionCancelada:
+                print(Color.aviso("Corte cancelado. No se genero el comprobante."))
+                pausar()
+                return
+            except ValueError as error:
+                print(Color.error(str(error)))
+                pausar()
+
+        datos = {
+            "fecha": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "cajero": self.usuario.nombre_completo,
+            "iva_pct": int(round(IVA_FRONTERA * 100)),
+            "metodos": corte["metodos"],
+            "gran": g,
+            "esperado": esperado,
+            "contado": contado,
+            "diferencia": round(contado - esperado, 2),
+            "respaldo": None,
+        }
+        aviso = None
+        try:
+            self.reportes.guardar_corte_txt(datos)
+        except Exception as error:
+            aviso = f"No se pudo guardar el respaldo .txt: {error}"
+
+        limpiar_pantalla()
+        print(imprimir_encabezado_sesion(
+            self.usuario,
+            breadcrumb=["Inicio", "Panel Admin", "Consultas y Reportes", "Corte de Caja", "Comprobante"]
+        ))
+        print()
+        columnas = shutil.get_terminal_size(fallback=(80, 24)).columns
+        imprimir_bloque_centrado(lineas_corte_caja(datos, ancho_comprobante(columnas)))
+        if aviso:
+            print(_centrar_texto(Color.aviso(aviso)))
+        print()
+        pausar()
+>>>>>>> 65287f2 (Programa completo)
+
+    def _consulta_1(self):
+        while True:
+            limpiar_pantalla()
+            print(imprimir_encabezado_sesion(
+                self.usuario,
+                breadcrumb=["Inicio", "Panel Admin", "Consultas", "C1 - Detalle Venta"]
+            ))
+            print(f"\n  {Color.titulo('C1 - DETALLE DE VENTA')}\n")
+            try:
+                # Tabla de referencia: los ultimos 15 folios, para no adivinar folios.
+                print(self._tabla_ultimos_folios())
                 folio = pedir_entero_positivo(prompt="Numero de folio de venta", ejemplo="1")
                 enc_venta, lineas = self.reporte_srv.consulta_1_detalle_venta(folio)
                 if not enc_venta:
@@ -164,14 +352,18 @@ class AdminConsultas:
         if idx == 2:
             return
 
-        cols = ["Folio", "Fecha", "Insumo", "Cantidad", "Tipo", "Motivo"]
+        # Historial de mermas: solo consulta. El registro lo hacen los baristas desde su menu.
+        cols = ["FECHA", "BARISTA", "INSUMO", "CANTIDAD", "MOTIVO"]
 
         if idx == 0:
-            mermas = self.reporte_srv.consulta_3_mermas_semana()
-            filas = []
-            for m in mermas:
-                filas.append((m["codigo"], m["fecha"], m["insumo"], m["cantidad"],
-                               m["tipo_merma"], m["motivo"]))
+            try:
+                mermas = self.reporte_srv.consulta_3_mermas_semana()
+            except Exception as error:
+                print(Color.error(str(error)))
+                pausar()
+                return
+            filas = [(m["fecha"], m["barista"], m["insumo"], m["cantidad"], m["motivo"])
+                     for m in mermas]
             limpiar_pantalla()
             print(imprimir_encabezado_sesion(
                 self.usuario,
@@ -203,8 +395,13 @@ class AdminConsultas:
                         self.usuario,
                         breadcrumb=["Inicio", "Panel Admin", "Consultas", f"C3 - Merma #{folio}"]
                     ))
+<<<<<<< HEAD
                     filas = [(merma["codigo"], merma["fecha"], merma["insumo"], merma["cantidad"],
                               merma["tipo_merma"], merma["motivo"])]
+=======
+                    filas = [(merma["fecha"], merma["barista"], merma["insumo"], merma["cantidad"],
+                              merma["motivo"])]
+>>>>>>> 65287f2 (Programa completo)
                     imprimir_tabla(f"C3 - MERMA #{folio}", cols, filas)
                     self.reportes.reporte_generico(
                         f"Reporte_C3_Merma_{folio}",
@@ -247,6 +444,10 @@ class AdminConsultas:
                 pfx = _prefijo(_ancho())
                 print(f"\n{pfx}  {Color.titulo('C4 - VENTAS POR EMPLEADO Y FECHA')}")
                 print(f"{pfx}  Empleado: {Color.CARAMELO}{emp['nombre']}{Color.RESET}\n")
+<<<<<<< HEAD
+=======
+                print(self._tabla_ultimos_folios())  # referencia antes de pedir la fecha
+>>>>>>> 65287f2 (Programa completo)
                 while True:
                     try:
                         fecha = pedir_fecha()
@@ -279,7 +480,12 @@ class AdminConsultas:
                 pausar()
 
     def _consulta_5(self):
-        productos: Any = self.producto_srv.listar_todos_productos()
+        try:
+            productos: Any = self.producto_srv.listar_todos_productos()
+        except Exception as error:
+            print(Color.error(str(error)))
+            pausar()
+            return
         if not productos:
             print(Color.aviso(texto="No hay productos."))
             pausar()
@@ -294,7 +500,12 @@ class AdminConsultas:
         if idx == len(productos):
             return
         prod = productos[idx]
-        receta = self.reporte_srv.consulta_5_insumos_receta(prod["codigo"])
+        try:
+            receta = self.reporte_srv.consulta_5_insumos_receta(prod["codigo"])
+        except Exception as error:
+            print(Color.error(str(error)))
+            pausar()
+            return
         cols = ["Codigo", "Insumo", "Requerido", "Stock Actual", "Unidad"]
         filas = [(r["insumo_codigo"], r["nombre"], r["requerido"],
                   r["stockActual"], r["abreviatura"]) for r in receta]

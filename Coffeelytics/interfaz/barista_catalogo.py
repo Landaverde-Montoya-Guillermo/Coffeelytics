@@ -4,8 +4,10 @@ from interfaz.estilos import Color
 from consola_ui import (
     limpiar_pantalla, pausar, seleccionar_con_flechas,
     imprimir_encabezado_sesion, imprimir_tabla,
-    pedir_cantidad_carrito, OperacionCancelada
+    pedir_cantidad_carrito, pedir_input_centrado, OperacionCancelada,
+    _centrar_texto
 )
+from interfaz.visor_cliente import renderizar_visor_coffeelytics
 
 
 class BaristaCatalogo:
@@ -17,6 +19,7 @@ class BaristaCatalogo:
 
     def catalogo_productos(self):
         while True:
+<<<<<<< HEAD
             categorias = self.producto_srv.obtener_categorias_con_conteo()
             if not categorias:
                 print(Color.aviso("No hay categorias disponibles."))
@@ -30,8 +33,39 @@ class BaristaCatalogo:
             enc = imprimir_encabezado_sesion(
                 self.usuario,
                 breadcrumb=["Inicio", "Panel Barista", "Nueva Venta", "Catalogo"]
+=======
+            try:
+                categorias = self.producto_srv.obtener_categorias_con_conteo()
+            except Exception as error:
+                print(Color.error(str(error)))
+                pausar()
+                return
+            if not categorias:
+                print(Color.aviso("No hay categorias disponibles."))
+            opciones_cat = (
+                ["[>>] Buscar producto por nombre o codigo"]
+                + [
+                    f"{c['nombre']:<24}  Disponibles: {c['disponibles']}/{c['total']}"
+                    for c in categorias
+                ]
+                + [
+                    f"Ver / gestionar carrito ({len(self.carrito.items)} productos)",
+                    "<< Volver al Menu Barista",
+                ]
+>>>>>>> 65287f2 (Programa completo)
             )
+            enc = "\n".join([
+                imprimir_encabezado_sesion(
+                    self.usuario,
+                    breadcrumb=["Inicio", "Panel Barista", "Nueva Venta", "Catalogo"]
+                ),
+                renderizar_visor_coffeelytics(self.carrito),
+            ])
             idx = seleccionar_con_flechas("CATALOGO - Selecciona categoria", opciones_cat, enc)
+            if idx == 0:
+                self.buscar_producto()
+                continue
+            idx -= 1  # Se descuenta la opcion de busqueda.
             if idx == len(categorias):
                 self.carrito_ui.gestionar_carrito()
                 continue
@@ -39,11 +73,77 @@ class BaristaCatalogo:
                 return
             self.listar_productos_categoria(categorias[idx])
 
+    def buscar_producto(self):
+        """
+        Buscador del catalogo: filtra en memoria por codigo o nombre (sin distinguir mayusculas).
+        ENTER vacio muestra todo. Sin coincidencias avisa con [!], pausa y muestra el catalogo completo.
+        """
+        limpiar_pantalla()
+        print(imprimir_encabezado_sesion(
+            self.usuario,
+            breadcrumb=["Inicio", "Panel Barista", "Nueva Venta", "Catalogo", "Buscar"]
+        ))
+        print(renderizar_visor_coffeelytics(self.carrito))
+        print()
+        try:
+            termino = pedir_input_centrado("Escribe el codigo o nombre a buscar (ENTER para ver todo)")
+            termino = termino.strip()
+            if termino and not self._filtrar_catalogo(termino):
+                print(_centrar_texto(Color.aviso(
+                    f"Sin coincidencias para '{termino}'. Se muestra el catalogo completo."
+                )))
+                pausar()
+                termino = ""
+        except Exception as error:
+            print(Color.error(str(error)))
+            pausar()
+            return
+
+        titulo = f"RESULTADOS: '{termino}'" if termino else "CATALOGO COMPLETO"
+        self._menu_productos(
+            titulo,
+            lambda: self._filtrar_catalogo(termino),
+            ["Inicio", "Panel Barista", "Nueva Venta", "Catalogo", "Buscar"],
+            "No hay productos disponibles en el catalogo."
+        )
+
+    def _filtrar_catalogo(self, termino):
+        """Productos vendibles cuyo codigo o nombre contienen el termino (vacio = todos)."""
+        todos = self.producto_srv.obtener_catalogo_vendible()
+        buscado = (termino or "").strip().lower()
+        if not buscado:
+            return todos
+        return [
+            p for p in todos
+            if buscado in str(p.codigo).lower() or buscado in p.nombre.lower()
+        ]
+
     def listar_productos_categoria(self, cat):
+        self._menu_productos(
+            f"CATEGORIA: {cat['nombre']}",
+            lambda: self.producto_srv.obtener_productos_por_categoria(cat["codigo"]),
+            ["Inicio", "Panel Barista", "Nueva Venta", "Catalogo", cat["nombre"]],
+            "No hay productos activos con receta en esta categoria."
+        )
+
+    def _menu_productos(self, titulo, cargar, ruta, vacio_msg):
+        """
+        Menu de productos reutilizable (categoria o resultados de busqueda).
+        `cargar` vuelve a consultar la lista en cada vuelta para reflejar el stock actual.
+        """
         while True:
-            productos = self.producto_srv.obtener_productos_por_categoria(cat["codigo"])
+            try:
+                productos = cargar()
+            except Exception as error:
+                print(Color.error(str(error)))
+                pausar()
+                return
             if not productos:
+<<<<<<< HEAD
                 print(Color.aviso("No hay productos activos con receta en esta categoria."))
+=======
+                print(Color.aviso(vacio_msg))
+>>>>>>> 65287f2 (Programa completo)
                 pausar()
                 return
             etiquetas = []
@@ -55,6 +155,7 @@ class BaristaCatalogo:
                 f"Ver / gestionar carrito ({len(self.carrito.items)} productos)",
                 "<< Volver al Catalogo",
             ])
+<<<<<<< HEAD
             enc = imprimir_encabezado_sesion(
                 self.usuario,
                 breadcrumb=[
@@ -63,6 +164,13 @@ class BaristaCatalogo:
                 ]
             )
             idx = seleccionar_con_flechas(f"CATEGORIA: {cat['nombre']}", etiquetas, enc)
+=======
+            enc = "\n".join([
+                imprimir_encabezado_sesion(self.usuario, breadcrumb=ruta),
+                renderizar_visor_coffeelytics(self.carrito),
+            ])
+            idx = seleccionar_con_flechas(titulo, etiquetas, enc)
+>>>>>>> 65287f2 (Programa completo)
             if idx == len(productos):
                 self.carrito_ui.gestionar_carrito()
                 continue
@@ -183,4 +291,8 @@ class BaristaCatalogo:
             except Exception as error:
                 print(Color.error(str(error)))
                 pausar()
+<<<<<<< HEAD
                 continue
+=======
+                return
+>>>>>>> 65287f2 (Programa completo)

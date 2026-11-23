@@ -1,4 +1,5 @@
 from interfaz.estilos import Color
+from consola_ui import tabla_centrada
 from consola_ui import (
     limpiar_pantalla, pausar, seleccionar_con_flechas,
     imprimir_encabezado_sesion,
@@ -29,10 +30,22 @@ class BaristaOperaciones:
             pausar()
             return
 
+<<<<<<< HEAD
         enc = imprimir_encabezado_sesion(
             self.usuario,
             breadcrumb=["Inicio", "Panel Barista", "Registrar Merma", "Selecciona insumo"]
         )
+=======
+        # Tabla de referencia de insumos activos antes de elegir el insumo a mermar.
+        filas_ins = [(i["codigo"], i["nombre"], i["stockActual"], i["abreviatura"]) for i in insumos]
+        enc = "\n".join([
+            imprimir_encabezado_sesion(
+                self.usuario,
+                breadcrumb=["Inicio", "Panel Barista", "Registrar Merma", "Selecciona insumo"]
+            ),
+            tabla_centrada("INSUMOS ACTIVOS", ["CODIGO", "INSUMO", "STOCK ACTUAL", "UNIDAD"], filas_ins),
+        ])
+>>>>>>> 65287f2 (Programa completo)
         opts_i = [
             f"{i['codigo']:<12} {i['nombre']:<26} Categoria: {i['categoria']:<22} "
             f"Stock: {i['stockActual']} {i['abreviatura']}"
@@ -95,7 +108,12 @@ class BaristaOperaciones:
         while True:
             try:
                 ok, msg = self.merma_srv.registrar_merma(
+<<<<<<< HEAD
                     ins["codigo"], tipo["codigo"], cantidad, motivo
+=======
+                    ins["codigo"], tipo["codigo"], cantidad, motivo,
+                    self.usuario.num  # idEmpleado del barista autenticado
+>>>>>>> 65287f2 (Programa completo)
                 )
             except Exception as error:
                 print(Color.error(str(error)))

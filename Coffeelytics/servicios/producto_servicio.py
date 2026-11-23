@@ -19,6 +19,15 @@ class ProductoServicio:
             repo = ProductoRepositorio(cursor)
             return repo.obtener_por_categoria(cod_categoria)
 
+<<<<<<< HEAD
+=======
+    def obtener_catalogo_vendible(self):
+        """Catalogo vendible completo (todas las categorias), para el buscador del barista."""
+        with transaccion(dictionary=True) as cursor:
+            repo = ProductoRepositorio(cursor)
+            return repo.obtener_catalogo_vendible()
+
+>>>>>>> 65287f2 (Programa completo)
     def es_producto_vendible(self, cod_producto):
         with transaccion(dictionary=True) as cursor:
             repo = ProductoRepositorio(cursor)

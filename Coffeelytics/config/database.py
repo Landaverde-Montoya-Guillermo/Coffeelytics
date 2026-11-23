@@ -3,7 +3,8 @@ from contextlib import contextmanager
 import mysql.connector
 from dotenv import load_dotenv
 
-load_dotenv()
+_RAIZ_PROYECTO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv(os.path.join(_RAIZ_PROYECTO, ".env"))
 
 DB_CONFIG = {
     "host": os.getenv("DB_HOST", "127.0.0.1"),

@@ -1,3 +1,4 @@
+import datetime
 from decimal import Decimal
 from mysql.connector import Error
 from config.database import transaccion
@@ -25,7 +26,13 @@ class CompraServicio:
         total = round(sub + iva, 2)
         return tasa, sub, iva, total
 
-    def registrar_compra_proveedor(self, cod_proveedor, cod_insumo, cantidad, precio_unit, metodo_pago, num_empleado):
+    def registrar_compra_proveedor(self, cod_proveedor, cod_insumo, cantidad, precio_unit,
+                                   metodo_pago, num_empleado, autorizo="", unidad=""):
+        """
+        Registra la compra y actualiza el stock.
+        Devuelve (ok, mensaje, datos). `datos` es el dict del comprobante (None si falla),
+        con el que GeneradorDocumentos arma el ticket en consola y el respaldo .txt.
+        """
         try:
             cant_val = EntidadBase.validar_positivo(cantidad, "cantidad comprada")
             precio_val = EntidadBase.validar_positivo(precio_unit, "precio unitario")
@@ -50,13 +57,34 @@ class CompraServicio:
                 folio = compra_repo.insertar_encabezado(total, cod_proveedor, metodo_pago, num_empleado)
                 compra_repo.insertar_linea(folio, cod_insumo, cant_val, precio_val, sub, iva, total)
 
-                nuevo_stock = Decimal(str(ins_db["stockActual"])) + Decimal(str(cant_val))
+                stock_anterior = Decimal(str(ins_db["stockActual"]))
+                nuevo_stock = stock_anterior + Decimal(str(cant_val))
                 insumo_repo.actualizar_stock(cod_insumo, nuevo_stock)
 
                 InventarioServicio.sincronizar_estatus_productos(cursor)
 
-            return True, f"Compra #{folio} registrada (IVA {int(tasa * 100)}%). Productos reactivados."
+            datos = {
+                "folio": f"#{int(folio):05d}",
+                "folio_num": int(folio),
+                "fecha": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "proveedor": prov["nombre"],
+                "ciudad": prov.get("ciudad") or "",
+                "autorizo": autorizo or f"Empleado {num_empleado}",
+                "metodo": metodo_pago,
+                "insumo": ins_db["nombre"],
+                "cantidad": float(cant_val),
+                "unidad": unidad,
+                "costo_unit": float(precio_val),
+                "subtotal": sub,
+                "iva": iva,
+                "iva_pct": int(round(tasa * 100)),
+                "total": total,
+                "stock_anterior": float(stock_anterior),
+                "stock_nuevo": float(nuevo_stock),
+                "respaldo": None,
+            }
+            return True, f"Compra #{folio} registrada (IVA {int(tasa * 100)}%). Productos reactivados.", datos
         except ValidacionError as e:
-            return False, str(e)
+            return False, str(e), None
         except Error as e:
-            return False, f"Error al registrar compra: {str(e)}"
+            return False, f"Error al registrar compra: {str(e)}", None

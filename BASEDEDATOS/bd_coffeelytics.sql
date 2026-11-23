@@ -188,9 +188,11 @@ CREATE TABLE merma (
     cantidad DECIMAL(10,2) NOT NULL,
     tipo VARCHAR(5) NOT NULL,
     insumo VARCHAR(6) NOT NULL,
+    idEmpleado INT NULL,  -- barista que registro la merma; NULL en registros previos a esta columna
     PRIMARY KEY (codigo),
     FOREIGN KEY (tipo) REFERENCES tipo_merma(codigo),
-    FOREIGN KEY (insumo) REFERENCES insumo(codigo)
+    FOREIGN KEY (insumo) REFERENCES insumo(codigo),
+    FOREIGN KEY (idEmpleado) REFERENCES empleado(num)
 );
 
 -- ----------------------------------------------------------------------------
