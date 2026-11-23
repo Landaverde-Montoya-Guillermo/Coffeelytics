@@ -758,12 +758,14 @@ def pedir_telefono(prompt="Telefono"):
 
 
 def pedir_numero_positivo(prompt="Cantidad", unidad="", ejemplo="1000",
-                          stock_max=None, nombre_campo="cantidad"):
+                          stock_max=None, nombre_campo="cantidad", solo_entero=False):
+    formato = "Numero entero positivo" if solo_entero else \
+        f"Numero entero o decimal positivo{' en ' + unidad if unidad else ''}"
     desc_stock = f"  No puede exceder el stock disponible ({stock_max} {unidad})." \
                  if stock_max is not None else ""
     _imprimir_guia(
         f"{nombre_campo.capitalize()} numerica mayor a cero",
-        f"Numero entero o decimal positivo{' en ' + unidad if unidad else ''}",
+        formato,
         ejemplo,
         f"Se validara antes de registrar.{desc_stock}"
     )
@@ -775,10 +777,14 @@ def pedir_numero_positivo(prompt="Cantidad", unidad="", ejemplo="1000",
         raise ValueError(f"Valor invalido. '{raw.strip()}' no es un numero positivo.")
     if not math.isfinite(val) or val <= 0:
         raise ValueError("La cantidad debe ser un numero finito mayor a cero.")
+    if solo_entero and not val.is_integer():
+        raise ValueError(
+            f"No se permiten decimales para la unidad {unidad}. Ingresa una cantidad entera."
+        )
     if stock_max is not None and val > float(stock_max):
         raise ValueError(
             f"La cantidad ({val}) supera el stock disponible ({stock_max} {unidad}).")
-    return val
+    return int(val) if solo_entero else val
 
 
 def pedir_precio(prompt="Precio unitario ($MXN)", ejemplo="0.85"):

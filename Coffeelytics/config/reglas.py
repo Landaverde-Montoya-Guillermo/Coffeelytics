@@ -4,6 +4,8 @@ IVA_GENERAL  = 0.16   # 16% para compras a proveedores fuera de la franja fronte
 ESTATUS_ACTIVO = 1
 ESTATUS_NO_DISPONIBLE = 2
 
+UNIDADES_CONTEO_ENTERO = frozenset({"BOLS", "BOTE", "CAJA", "GARF", "PAQU"})
+
 CIUDADES_FRONTERA = [
     "tijuana",
     "mexicali",

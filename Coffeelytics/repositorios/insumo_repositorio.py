@@ -41,12 +41,13 @@ class InsumoRepositorio(BaseRepositorio):
 
     def obtener_insumos_mesa(self):
         self._cursor.execute("""
-            SELECT i.codigo, i.nombre, i.stockActual, i.stockMin, u.abreviatura
+            SELECT i.codigo, i.nombre, i.stockActual, i.stockMin,
+                   u.codigo AS unidad_codigo, u.abreviatura
             FROM insumo i
             INNER JOIN unidad_medida u ON i.unidad = u.codigo
             WHERE i.categoria = %s
             ORDER BY i.codigo
-        """, ("DESC",))
+        """, ("MESA",))
         return self._cursor.fetchall()
 
     def obtener_insumos_receta(self):
@@ -56,12 +57,13 @@ class InsumoRepositorio(BaseRepositorio):
             INNER JOIN unidad_medida u ON i.unidad = u.codigo
             WHERE i.categoria <> %s
             ORDER BY i.codigo
-        """, ("DESC",))
+        """, ("MESA",))
         return self._cursor.fetchall()
 
     def obtener_por_codigo(self, cod_insumo):
         self._cursor.execute(
-            "SELECT codigo, nombre, stockActual, stockMin FROM insumo WHERE codigo = %s",
+            "SELECT codigo, nombre, stockActual, stockMin, unidad AS unidad_codigo "
+            "FROM insumo WHERE codigo = %s",
             (cod_insumo,)
         )
         return self._cursor.fetchone()

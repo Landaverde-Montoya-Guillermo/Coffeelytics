@@ -98,6 +98,7 @@ INSERT INTO EMPLEADO (num, nombrePila, primApell, segApell, RFC, telefono, corre
 (4, 'Carlos', 'Herrera', 'Vega', 'HEVC990215H4', '6641234504', 'carlos.herrera@coffeelytics.com', 'ALMC');
 -- CONSUMIBLE_MESA
 INSERT INTO CONSUMIBLE_MESA (codigo, nombre, empleado) VALUES
+('MESA1', 'Barra Autoservicio Principal', 2),
 ('AZUCA', 'Azúcar estándar en sobres', 1),
 ('SPLEN', 'Endulzante Splenda en sobres', 1),
 ('SERVI', 'Servilletas', 2),
@@ -359,3 +360,28 @@ INSERT INTO PROD_VENTA (venta, producto, cantidad, precioUnitarioVenta, subtotal
 (24, 'LATT', 2, 65.00, 130.00, 10.40, 140.40),
 (24, 'MOCH', 1, 74.00, 74.00, 5.92, 79.92),
 (24, 'GAVE', 1, 28.00, 28.00, 2.24, 30.24);
+
+INSERT INTO EMPLEADO (num, nombrePila, primApell, segApell, RFC, telefono, correo, rol) VALUES
+(5, 'Valeria', 'Navarro', 'Sánchez', 'NASV970918M5', '6641234505', 'valeria.navarro@coffeelytics.com', 'ADMN'),
+(6, 'Diego', 'Castillo', 'Ríos', 'CARD960411H6', '6641234506', 'diego.castillo@coffeelytics.com', 'ADMN'),
+(7, 'Fernanda', 'Ortega', 'Jiménez', 'OEJF991207M7', '6641234507', 'fernanda.ortega@coffeelytics.com', 'ADMN');
+
+INSERT INTO EMPLEADO (num, nombrePila, primApell, segApell, RFC, telefono, correo, rol) VALUES
+(8, 'Mateo', 'Guzmán', 'Flores', 'GUGM010319H8', '6641234508', 'mateo.guzman@coffeelytics.com', 'BARS'),
+(9, 'Camila', 'Reyes', 'Morales', 'REMC020725M9', '6641234509', 'camila.reyes@coffeelytics.com', 'BARS'),
+(10, 'Sebastián', 'Vargas', 'Silva', 'VASO001114H0', '6641234510', 'sebastian.vargas@coffeelytics.com', 'BARS');
+
+INSERT INTO INSUMO (codigo, nombre, stockActual, stockMin, seccion, estante, categoria, unidad) VALUES
+('SOBSTE', 'Caja sobres azúcar stevia (1000 pzas)', 6.00, 2.00, 3, 4, 'MESA', 'CAJA'),
+('TOALLH', 'Paquete toallas húmedas (200 pzas)', 9.00, 3.00, 4, 4, 'MESA', 'PAQU'),
+('AZUMAS', 'Bolsa azúcar mascabado 2kg', 10.00, 3.00, 5, 2, 'MESA', 'BOLS');
+
+INSERT INTO CONSUMIBLE_MESA (codigo, nombre, empleado) VALUES
+('STEVI', 'Endulzante stevia en sobres', 1),
+('TOALL', 'Toallas húmedas para mesa', 2),
+('MASCA', 'Azúcar mascabado', 8);
+
+INSERT INTO con_insum (insumo, mesa, cantidad) VALUES
+('SOBSTE', 'STEVI', 1.00),
+('TOALLH', 'TOALL', 1.00),
+('AZUMAS', 'MASCA', 1.00);

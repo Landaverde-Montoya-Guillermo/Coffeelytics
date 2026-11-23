@@ -1,5 +1,6 @@
 from interfaz.estilos import Color
 from consola_ui import tabla_centrada
+from config.reglas import UNIDADES_CONTEO_ENTERO
 from consola_ui import (
     limpiar_pantalla, pausar, seleccionar_con_flechas,
     imprimir_encabezado_sesion,
@@ -190,9 +191,10 @@ class BaristaOperaciones:
                     cantidad = pedir_numero_positivo(
                         prompt="Cantidad a surtir",
                         unidad=ins["abreviatura"],
-                        ejemplo="50",
+                        ejemplo="1" if ins["unidad_codigo"] in UNIDADES_CONTEO_ENTERO else "50",
                         stock_max=float(ins["stockActual"]),
-                        nombre_campo="cantidad a surtir"
+                        nombre_campo="cantidad a surtir",
+                        solo_entero=ins["unidad_codigo"] in UNIDADES_CONTEO_ENTERO
                     )
                     break
                 except ValueError as error:
@@ -239,9 +241,10 @@ class BaristaOperaciones:
                         cantidad = pedir_numero_positivo(
                             prompt="Cantidad a surtir",
                             unidad=ins["abreviatura"],
-                            ejemplo="50",
+                            ejemplo="1" if ins["unidad_codigo"] in UNIDADES_CONTEO_ENTERO else "50",
                             stock_max=float(ins["stockActual"]),
-                            nombre_campo="cantidad a surtir"
+                            nombre_campo="cantidad a surtir",
+                            solo_entero=ins["unidad_codigo"] in UNIDADES_CONTEO_ENTERO
                         )
                         break
                     except ValueError as error:
