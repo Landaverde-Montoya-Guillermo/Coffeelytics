@@ -39,6 +39,11 @@ def _columnas():
     return shutil.get_terminal_size(fallback=(80, 24)).columns
 
 
+def _filas():
+    """Filas reales de la terminal (con respaldo de 24 si no se detectan)."""
+    return shutil.get_terminal_size(fallback=(80, 24)).lines
+
+
 def _ancho():
     """Ancho util de los bloques de la UI, acotado a ANCHO_MAXIMO_UI."""
     return min(_columnas(), ANCHO_MAXIMO_UI)
@@ -221,6 +226,16 @@ def seleccionar_con_flechas(titulo, opciones, encabezado_extra=""):
     ultima_es_volver = any(kw in opciones[-1].lower()
                            for kw in ["volver", "cancelar", "salir", "<<"])
     ancho_txt = max(20, ancho - 12)
+    filas = max(10, _filas())
+
+    def _lineas_encabezado():
+        if not encabezado_extra:
+            return []
+        presupuesto = max(3, filas - 16)
+        lineas = str(encabezado_extra).splitlines()
+        if len(lineas) > presupuesto:
+            return lineas[-presupuesto:]
+        return lineas
 
     def _titulo_linea():
         titulo_fmt = f" {titulo} "
@@ -253,13 +268,36 @@ def seleccionar_con_flechas(titulo, opciones, encabezado_extra=""):
     sel = 0
     while True:
         limpiar_pantalla()
-        if encabezado_extra:
-            print(encabezado_extra)
+        lineas_encabezado = _lineas_encabezado()
+        if lineas_encabezado:
+            print("\n".join(lineas_encabezado))
         print(sep)
         print(_titulo_linea())
         print(sep)
 
-        for i, op in enumerate(opciones):
+        presupuesto_lineas = max(4, filas - len(lineas_encabezado) - 10)
+        cantidad_visible = 0
+        lineas_consumidas = 0
+        for op in opciones:
+            lineas_opcion = max(1, len(_partir(op, ancho_txt)))
+            lineas_con_separador = lineas_opcion + 1
+            if lineas_consumidas + lineas_con_separador > presupuesto_lineas:
+                break
+            lineas_consumidas += lineas_con_separador
+            cantidad_visible += 1
+        cantidad_visible = min(total, max(1, cantidad_visible))
+        if total <= cantidad_visible:
+            inicio = 0
+            fin = total
+        else:
+            inicio = max(0, min(sel - cantidad_visible // 2, total - cantidad_visible))
+            fin = inicio + cantidad_visible
+
+        if inicio > 0:
+            print(f"{pfx}  {Color.DIM}... {inicio} opcion(es) anteriores ...{Color.RESET}")
+
+        for i in range(inicio, fin):
+            op = opciones[i]
             es_volver = ultima_es_volver and i == total - 1
             trozos = _partir(op, ancho_txt)
             for j, trozo in enumerate(trozos):
@@ -276,6 +314,9 @@ def seleccionar_con_flechas(titulo, opciones, encabezado_extra=""):
                     print(f"{pfx}  {color}{marca}{trozo}{Color.RESET}")
             if i < total - 1:
                 print(f"{pfx}  {Color.DIM}{'─' * (ancho - 4)}{Color.RESET}")
+
+        if fin < total:
+            print(f"{pfx}  {Color.DIM}... {total - fin} opcion(es) siguientes ...{Color.RESET}")
 
         print()
         print(_centrar_texto(

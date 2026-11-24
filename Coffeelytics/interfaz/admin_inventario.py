@@ -476,13 +476,22 @@ class AdminInventario:
 
             while True:
                 try:
+                    opciones_unidad = " o ".join(
+                        item["codigo"].upper() for item in unidades
+                    )
+                    ejemplos_unidad = ", ".join(
+                        f'{item["codigo"].upper()} ({item["abreviatura"]})'
+                        for item in unidades
+                    )
                     _imprimir_guia(
                         "Codigo de unidad de medida",
                         "Codigo corto en mayusculas registrado en la BD",
-                        "KG o LT o PZ o ML",
-                        "Debe coincidir con una unidad existente."
+                        ejemplos_unidad,
+                        f"Opciones validas: {opciones_unidad}. Debe coincidir exactamente."
                     )
-                    raw_uni = _input_centrado("Codigo de unidad (ej. KG, LT, PZ)")
+                    raw_uni = _input_centrado(
+                        f"Codigo de unidad (ej. {opciones_unidad})"
+                    )
                     if raw_uni.strip().upper() in ("0", "CANCELAR"):
                         raise OperacionCancelada()
                     unidad = raw_uni.strip().upper()
@@ -522,13 +531,22 @@ class AdminInventario:
 
             while True:
                 try:
+                    ejemplos_categoria = ", ".join(
+                        f'{item["codigo"].upper()} ({item["nombre"]})'
+                        for item in categorias
+                    )
+                    opciones_categoria = " o ".join(
+                        item["codigo"].upper() for item in categorias
+                    )
                     _imprimir_guia(
                         "Categoria del insumo en el almacen",
                         "Codigo de categoria registrado en la BD",
-                        "CAFE o LACTE o ENDULZANTE",
-                        "Debe coincidir con una categoria existente."
+                        ejemplos_categoria,
+                        f"Opciones validas: {opciones_categoria}. Debe coincidir exactamente."
                     )
-                    raw_cat = _input_centrado("Categoria de insumo")
+                    raw_cat = _input_centrado(
+                        f"Categoria de insumo (ej. {opciones_categoria})"
+                    )
                     if raw_cat.strip().upper() in ("0", "CANCELAR"):
                         raise OperacionCancelada()
                     cat_ins = raw_cat.strip().upper()

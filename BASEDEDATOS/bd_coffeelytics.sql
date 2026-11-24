@@ -1,4 +1,4 @@
--- Active: 1794535651012@@127.0.0.1@3306@bd_coffeelytics
+-- Active: 1792597882538@@127.0.0.1@3306@bd_coffeelytics
 -- ============================================================================
 -- ARCHIVO: bd_coffeelytics.sql
 -- UBICACIÓN: coffeelytics/bd_coffeelytics.sql

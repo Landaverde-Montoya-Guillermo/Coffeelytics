@@ -1,0 +1,25 @@
+╔══════════════════════════════════════════════════════════╗
+║            COFFEELYTICS - COMPRAS A PROVEEDOR            ║
+║            COMPROBANTE DE COMPRA A PROVEEDOR             ║
+╠══════════════════════════════════════════════════════════╣
+║ Folio de compra:    #00013                               ║
+║ Fecha y hora:       2026-11-23 09:56:02                  ║
+║ Proveedor:          Café Boato (Ciudad de México)        ║
+║ Autorizo:           Guillermo Landaverde                 ║
+║ Metodo de pago:     Efectivo                             ║
+╟──────────────────────────────────────────────────────────╢
+║    CANT │ INSUMO                 │    C.UNIT │   IMPORTE ║
+║ ────────┼────────────────────────┼───────────┼────────── ║
+║     100 │ Leche deslactosada UHT │    $35.00 │  $3500.00 ║
+║         │ 1L                     │           │           ║
+╟──────────────────────────────────────────────────────────╢
+║                           Subtotal:             $3500.00 ║
+║                           IVA (16%):             $560.00 ║
+║                           TOTAL COMPRA:         $4060.00 ║
+╟──────────────────────────────────────────────────────────╢
+║ Stock anterior:     36 L                                 ║
+║ Stock actualizado:  136 L                                ║
+║     [OK] Stock del insumo actualizado en inventario      ║
+╟──────────────────────────────────────────────────────────╢
+║               Respaldo .txt no disponible                ║
+╚══════════════════════════════════════════════════════════╝
