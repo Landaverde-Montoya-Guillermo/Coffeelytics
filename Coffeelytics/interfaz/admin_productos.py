@@ -6,7 +6,7 @@ from consola_ui import (
     imprimir_encabezado_sesion, imprimir_tabla,
     pedir_codigo, pedir_nombre_propio, pedir_precio,
     pedir_numero_positivo,
-    _ancho, _prefijo, OperacionCancelada
+    _ancho, _prefijo, OperacionCancelada, PasoAnterior
 )
 
 
@@ -99,7 +99,8 @@ class AdminProductos:
                             prompt=f"Cantidad de {ins_sel['nombre']} por cada '{prod_nombre}'",
                             unidad=ins_sel["abreviatura"],
                             ejemplo="250",
-                            nombre_campo="cantidad requerida"
+                            nombre_campo="cantidad requerida",
+                            unidad_codigo=ins_sel["unidad_codigo"]
                         )
                         break
                     except ValueError as error:
@@ -145,56 +146,79 @@ class AdminProductos:
                     pausar()
                     return
 
-                enc = imprimir_encabezado_sesion(
-                    self.usuario,
-                    breadcrumb=["Inicio", "Panel Admin", "Asignar Insumo a Receta", "Producto"]
-                )
-                opts = [f"{p['codigo']:<10} {p['nombre']:<30} ${p['precio']:.2f}  {p['categoria']}"
-                        for p in productos] + ["<< Finalizar y regresar"]
-                idx = seleccionar_con_flechas("ASIGNAR INSUMO A RECETA - Producto", opts, enc)
-                if idx == len(productos):
-                    return
-                prod = productos[idx]
-
-                enc2 = "\n".join([
-                    imprimir_encabezado_sesion(
-                        self.usuario,
-                        breadcrumb=["Inicio", "Panel Admin", "Asignar Insumo a Receta", "Insumo"]
-                    ),
-                    self._tablas_receta(prod, insumos),
-                ])
-                opts2 = [f"{i['codigo']:<12} {i['nombre']:<30} Stock: {i['stockActual']} {i['abreviatura']}"
-                         for i in insumos] + ["<< Cancelar y regresar"]
-                idx2 = seleccionar_con_flechas("Selecciona insumo a asignar a la receta", opts2, enc2)
-                if idx2 == len(insumos):
-                    return
-                ins = insumos[idx2]
-
-                limpiar_pantalla()
-                print(imprimir_encabezado_sesion(
-                    self.usuario,
-                    breadcrumb=["Inicio", "Panel Admin", "Asignar Insumo a Receta", "Cantidad"]
-                ))
-                pfx = _prefijo(_ancho())
-                print(f"\n{pfx}  {Color.titulo('ASIGNAR INSUMO A RECETA')}")
-                print(f"{pfx}  Producto: {Color.CARAMELO}{prod['nombre']}{Color.RESET}")
-                print(f"{pfx}  Insumo:   {Color.CARAMELO}{ins['nombre']}{Color.RESET}  ({ins['abreviatura']})\n")
-                print(Color.info("La cantidad indica cuanto de este insumo se consume por UNIDAD vendida del producto."))
-                print()
-
-                while True:
-                    while True:
-                        try:
+                paso = 1
+                while paso <= 3:
+                    try:
+                        if paso == 1:
+                            enc = imprimir_encabezado_sesion(
+                                self.usuario,
+                                breadcrumb=["Inicio", "Panel Admin", "Asignar Insumo a Receta",
+                                            "Producto"]
+                            )
+                            opts = [
+                                f"{p['codigo']:<10} {p['nombre']:<30} ${p['precio']:.2f} "
+                                f"{p['categoria']}" for p in productos
+                            ] + ["<< Volver al menu anterior"]
+                            idx = seleccionar_con_flechas(
+                                "ASIGNAR INSUMO A RECETA - Producto", opts, enc
+                            )
+                            if idx == len(productos):
+                                return
+                            prod = productos[idx]
+                        elif paso == 2:
+                            enc = "\n".join([
+                                imprimir_encabezado_sesion(
+                                    self.usuario,
+                                    breadcrumb=["Inicio", "Panel Admin", "Asignar Insumo a Receta",
+                                                "Insumo"]
+                                ),
+                                self._tablas_receta(prod, insumos),
+                            ])
+                            opts = [
+                                f"{i['codigo']:<12} {i['nombre']:<30} "
+                                f"Stock: {i['stockActual']} {i['abreviatura']}"
+                                for i in insumos
+                            ] + ["<< Paso anterior", "<< Cancelar y regresar"]
+                            idx = seleccionar_con_flechas(
+                                "Selecciona insumo a asignar a la receta", opts, enc
+                            )
+                            if idx == len(insumos) + 1:
+                                return
+                            ins = insumos[idx]
+                        elif paso == 3:
+                            limpiar_pantalla()
+                            print(imprimir_encabezado_sesion(
+                                self.usuario,
+                                breadcrumb=["Inicio", "Panel Admin", "Asignar Insumo a Receta",
+                                            "Cantidad"]
+                            ))
+                            pfx = _prefijo(_ancho())
+                            print(f"\n{pfx}  {Color.titulo('ASIGNAR INSUMO A RECETA')}")
+                            print(f"{pfx}  Producto: {Color.CARAMELO}{prod['nombre']}{Color.RESET}")
+                            print(f"{pfx}  Insumo:   {Color.CARAMELO}{ins['nombre']}{Color.RESET}  "
+                                  f"({ins['abreviatura']})\n")
+                            print(Color.info(
+                                "La cantidad indica cuanto de este insumo se consume por "
+                                "UNIDAD vendida del producto."
+                            ))
+                            print()
                             cantidad = pedir_numero_positivo(
                                 prompt="Cantidad requerida por unidad de producto",
                                 unidad=ins["abreviatura"],
                                 ejemplo="250",
-                                nombre_campo="cantidad en receta"
+                                nombre_campo="cantidad en receta",
+                                unidad_codigo=ins["unidad_codigo"]
                             )
-                            break
-                        except ValueError as error:
-                            print(Color.error(str(error)))
-                            pausar()
+                        paso += 1
+                    except PasoAnterior:
+                        if paso == 1:
+                            return
+                        paso -= 1
+                    except ValueError as error:
+                        print(Color.error(str(error)))
+                        pausar()
+
+                while True:
                     try:
                         ok, msg = self.producto_srv.registrar_insumo_en_receta(
                             prod["codigo"], ins["codigo"], cantidad
@@ -280,16 +304,55 @@ class AdminProductos:
             pausar()
             return
 
-        enc = imprimir_encabezado_sesion(
-            self.usuario,
-            breadcrumb=["Inicio", "Panel Admin", "Anadir Producto", "Categoria"]
-        )
-        opts = [f"{c['codigo']:<10} {c['nombre']}" for c in categorias] + ["<< Cancelar y regresar"]
-        idx = seleccionar_con_flechas("ANADIR PRODUCTO - Selecciona categoria", opts, enc)
-        if idx == len(categorias):
+        datos = {}
+        paso = 1
+        try:
+            while paso <= 4:
+                try:
+                    if paso == 1:
+                        enc = imprimir_encabezado_sesion(
+                            self.usuario,
+                            breadcrumb=["Inicio", "Panel Admin", "Anadir Producto", "Categoria"]
+                        )
+                        opts = [f"{c['codigo']:<10} {c['nombre']}" for c in categorias]
+                        opts.append("<< Volver al menu anterior")
+                        idx = seleccionar_con_flechas(
+                            "ANADIR PRODUCTO - Selecciona categoria", opts, enc
+                        )
+                        if idx == len(categorias):
+                            return
+                        datos["categoria"] = categorias[idx]
+                    elif paso == 2:
+                        codigo = pedir_codigo(
+                            prompt="Codigo del producto", longitud_max=4, ejemplo="P099"
+                        )
+                        for producto in productos_existentes:
+                            if codigo.upper() == producto["codigo"].upper():
+                                raise ValueError(f"El codigo '{codigo}' ya esta registrado.")
+                        datos["codigo"] = codigo
+                    elif paso == 3:
+                        datos["nombre"] = pedir_nombre_propio(
+                            prompt="Nombre del producto", ejemplo="Moka Navideno"
+                        )
+                    elif paso == 4:
+                        datos["precio"] = pedir_precio(ejemplo="65.00")
+                    paso += 1
+                except PasoAnterior:
+                    if paso == 1:
+                        return
+                    paso -= 1
+                except ValueError as error:
+                    print(Color.error(str(error)))
+                    pausar()
+        except (OperacionCancelada, PasoAnterior):
+            print(Color.aviso("Operacion cancelada. No se creo el producto."))
+            pausar()
             return
-        cat = categorias[idx]
 
+        cat = datos["categoria"]
+        codigo = datos["codigo"]
+        nombre = datos["nombre"]
+        precio = datos["precio"]
         limpiar_pantalla()
         print(imprimir_encabezado_sesion(
             self.usuario,
@@ -300,43 +363,6 @@ class AdminProductos:
         print(f"{pfx}  Categoria: {Color.CARAMELO}{cat['nombre']}{Color.RESET}\n")
         print(Color.info("El producto quedara con estatus Activo. Para que sea vendible debe tener receta asignada."))
         print()
-
-        try:
-            while True:
-                try:
-                    codigo = pedir_codigo(
-                        prompt="Codigo del producto", longitud_max=4, ejemplo="P099"
-                    )
-                    codigo_repetido = False
-                    for producto in productos_existentes:
-                        if codigo.upper() == producto["codigo"].upper():
-                            codigo_repetido = True
-                    if codigo_repetido:
-                        raise ValueError(f"El codigo '{codigo}' ya esta registrado.")
-                    break
-                except ValueError as error:
-                    print(Color.error(str(error)))
-                    pausar()
-
-            while True:
-                try:
-                    nombre = pedir_nombre_propio(prompt="Nombre del producto", ejemplo="Moka Navideno")
-                    break
-                except ValueError as error:
-                    print(Color.error(str(error)))
-                    pausar()
-
-            while True:
-                try:
-                    precio = pedir_precio(ejemplo="65.00")
-                    break
-                except ValueError as error:
-                    print(Color.error(str(error)))
-                    pausar()
-        except OperacionCancelada:
-            print(Color.aviso("Operacion cancelada. No se creo el producto."))
-            pausar()
-            return
 
         while True:
             try:
@@ -378,7 +404,7 @@ class AdminProductos:
                         except ValueError as error:
                             print(Color.error(str(error)))
                             pausar()
-                except OperacionCancelada:
+                except (OperacionCancelada, PasoAnterior):
                     print(Color.aviso("Operacion cancelada. No se creo el producto."))
                     pausar()
                     return

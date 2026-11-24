@@ -2,7 +2,7 @@ from interfaz.estilos import Color
 from consola_ui import (
     limpiar_pantalla, pausar, imprimir_encabezado_sesion,
     pedir_contrasena, pedir_correo, imprimir_caja_credenciales,
-    imprimir_banner, _ancho, _prefijo, OperacionCancelada
+    imprimir_banner, _ancho, _prefijo, OperacionCancelada, PasoAnterior
 )
 
 
@@ -28,7 +28,7 @@ class PantallaLogin:
                 correo = pedir_correo(aceptar_salir=True)
                 contra = pedir_contrasena("Contrasena (0/CANCELAR para volver): ")
                 empleado = self.auth_servicio.iniciar_sesion(correo, contra)
-            except OperacionCancelada:
+            except (OperacionCancelada, PasoAnterior):
                 print(Color.aviso("Operacion cancelada."))
                 pausar()
                 return None

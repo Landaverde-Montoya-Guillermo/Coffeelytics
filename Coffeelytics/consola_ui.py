@@ -19,12 +19,18 @@ from mysql.connector import Error as ErrorBaseDatos
 
 from interfaz.estilos import Color
 from config.negocio import INFO_CAFETERIA, LINEAS_BANNER_GRANDE
+from config.reglas import UNIDADES_CONTINUAS, UNIDADES_CONTEO_ENTERO
 
 
 # ── EXCEPCION DE CANCELACION ─────────────────────────────────────────────────
 
 class OperacionCancelada(Exception):
     """Se lanza cuando el usuario escribe 0 o CANCELAR en cualquier campo."""
+    pass
+
+
+class PasoAnterior(Exception):
+    """Se lanza cuando el usuario solicita volver al paso anterior."""
     pass
 
 
@@ -258,8 +264,19 @@ def seleccionar_con_flechas(titulo, opciones, encabezado_extra=""):
             except EOFError:
                 raise  # entrada cerrada: no repetir el aviso en bucle
             try:
+                if raw.strip().upper() in ("ATRAS", "<"):
+                    indice_anterior = -1
+                    for i, opcion in enumerate(opciones):
+                        if "<< Paso anterior" in opcion:
+                            raise PasoAnterior()
+                        if "<< Volver al menu anterior" in opcion:
+                            indice_anterior = i
+                    if indice_anterior >= 0:
+                        return indice_anterior
                 n = int(raw)
                 if 1 <= n <= total:
+                    if "<< Paso anterior" in opciones[n - 1]:
+                        raise PasoAnterior()
                     return n - 1
             except ValueError:
                 pass
@@ -329,6 +346,8 @@ def seleccionar_con_flechas(titulo, opciones, encabezado_extra=""):
         elif tecla == "ABAJO":
             sel = (sel + 1) % total
         elif tecla == "ENTER":
+            if "<< Paso anterior" in opciones[sel]:
+                raise PasoAnterior()
             return sel
         elif tecla == "ESC":
             return total - 1
@@ -408,6 +427,8 @@ def ejecutar_accion(accion, *args, **kwargs):
         raise
     except OperacionCancelada:
         print(_centrar_texto(Color.aviso("Operacion cancelada.")))
+    except PasoAnterior:
+        print(_centrar_texto(Color.aviso("Regresando al paso anterior.")))
     except ErrorBaseDatos as error:
         print(_centrar_texto(Color.error(f"Error de base de datos: {error}")))
     except Exception as error:
@@ -697,14 +718,20 @@ def _imprimir_guia(que, formato, ejemplo, accion="", nota=None):
     if accion:
         for l in linea("Accion:", accion, Color.DIM):
             print(l)
-    nota = nota or "Escribe 0 o CANCELAR para abortar y volver atras sin guardar."
+    nota = nota or "Escribe < o ATRAS para volver al paso anterior | 0 o CANCELAR para salir"
     for l in textwrap.wrap(nota, width=caja_w - 2):
         print(f"{p}  {Color.DIM}{l}{Color.RESET}")
+    if nota != "Escribe < o ATRAS para volver al paso anterior | 0 o CANCELAR para salir":
+        ayuda = "Escribe < o ATRAS para volver al paso anterior | 0 o CANCELAR para salir"
+        for l in textwrap.wrap(ayuda, width=caja_w - 2):
+            print(f"{p}  {Color.DIM}{l}{Color.RESET}")
     print(sep_in)
 
 
 def _verificar_cancelacion(val):
     normalizado = val.strip().upper()
+    if normalizado in ("ATRAS", "<"):
+        raise PasoAnterior("Regresar al paso anterior.")
     if normalizado in ("0", "CANCELAR"):
         raise OperacionCancelada("Operacion cancelada por el usuario.")
 
@@ -713,7 +740,10 @@ def _input_centrado(prompt):
     ancho = _ancho()
     pfx = _prefijo(ancho)
     print(f"{pfx}  {Color.CIAN}{prompt}: {Color.RESET}", end="", flush=True)
-    return input().strip()
+    valor = input().strip()
+    if valor.upper() in ("ATRAS", "<"):
+        raise PasoAnterior("Regresar al paso anterior.")
+    return valor
 
 
 def pedir_correo(prompt="Correo electronico", obligatorio=True, aceptar_salir=False):
@@ -798,9 +828,36 @@ def pedir_telefono(prompt="Telefono"):
     raise ValueError("Telefono invalido. Debe tener exactamente 10 digitos numericos.")
 
 
+def validar_cantidad_segun_unidad(valor, unidad_medida, solo_entero=False):
+    """Convierte una cantidad a int o float segun la unidad usada."""
+    unidad = str(unidad_medida or "").strip().upper()
+    try:
+        cantidad = float(valor)
+    except (TypeError, ValueError):
+        raise ValueError(f"Valor invalido. '{str(valor).strip()}' no es un numero positivo.")
+    if not math.isfinite(cantidad) or cantidad <= 0:
+        raise ValueError("La cantidad debe ser un numero finito mayor a cero.")
+
+    es_entera = solo_entero or unidad in UNIDADES_CONTEO_ENTERO or (
+        bool(unidad) and unidad not in UNIDADES_CONTINUAS
+    )
+    if es_entera and not cantidad.is_integer():
+        raise ValueError(
+            f"La unidad '{unidad}' solo acepta numeros enteros "
+            "(ej. 1, 2, 5). No se permiten decimales."
+        )
+    return int(cantidad) if es_entera else cantidad
+
+
 def pedir_numero_positivo(prompt="Cantidad", unidad="", ejemplo="1000",
-                          stock_max=None, nombre_campo="cantidad", solo_entero=False):
-    formato = "Numero entero positivo" if solo_entero else \
+                          stock_max=None, nombre_campo="cantidad", solo_entero=False,
+                          unidad_codigo=None):
+    unidad_validacion = unidad_codigo or unidad
+    unidad_normalizada = str(unidad_validacion or "").strip().upper()
+    es_entera = solo_entero or unidad_normalizada in UNIDADES_CONTEO_ENTERO or (
+        bool(unidad_normalizada) and unidad_normalizada not in UNIDADES_CONTINUAS
+    )
+    formato = "Numero entero positivo" if es_entera else \
         f"Numero entero o decimal positivo{' en ' + unidad if unidad else ''}"
     desc_stock = f"  No puede exceder el stock disponible ({stock_max} {unidad})." \
                  if stock_max is not None else ""
@@ -812,20 +869,11 @@ def pedir_numero_positivo(prompt="Cantidad", unidad="", ejemplo="1000",
     )
     raw = _input_centrado(f"{prompt}{' (' + unidad + ')' if unidad else ''}")
     _verificar_cancelacion(raw)
-    try:
-        val = float(raw)
-    except ValueError:
-        raise ValueError(f"Valor invalido. '{raw.strip()}' no es un numero positivo.")
-    if not math.isfinite(val) or val <= 0:
-        raise ValueError("La cantidad debe ser un numero finito mayor a cero.")
-    if solo_entero and not val.is_integer():
-        raise ValueError(
-            f"No se permiten decimales para la unidad {unidad}. Ingresa una cantidad entera."
-        )
+    val = validar_cantidad_segun_unidad(raw, unidad_validacion, solo_entero)
     if stock_max is not None and val > float(stock_max):
         raise ValueError(
             f"La cantidad ({val}) supera el stock disponible ({stock_max} {unidad}).")
-    return int(val) if solo_entero else val
+    return val
 
 
 def pedir_precio(prompt="Precio unitario ($MXN)", ejemplo="0.85"):
@@ -989,10 +1037,4 @@ def pedir_cantidad_carrito(nombre_producto):
     _verificar_cancelacion(raw)
     if raw == "":
         return 1
-    try:
-        cant = int(raw)
-        if cant > 0:
-            return cant
-    except ValueError:
-        raise ValueError("La cantidad debe ser un numero entero positivo.")
-    raise ValueError("La cantidad debe ser un numero entero positivo.")
+    return validar_cantidad_segun_unidad(raw, "PIEZA")

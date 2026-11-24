@@ -3,7 +3,7 @@ from mysql.connector import Error as ErrorBaseDatos
 from interfaz.estilos import Color
 from consola_ui import (
     habilitar_ansi_windows, limpiar_pantalla, pausar,
-    _centrar_texto, OperacionCancelada,
+    _centrar_texto, OperacionCancelada, PasoAnterior,
 )
 from documentos.generador_documentos import GeneradorDocumentos
 
@@ -71,6 +71,8 @@ class AppCoffeelytics:
                 self.usuario = None
             except OperacionCancelada:
                 self._mostrar_error_y_continuar("Operacion cancelada.")
+            except PasoAnterior:
+                self._mostrar_error_y_continuar("No hay un paso anterior en esta pantalla.")
             except ErrorBaseDatos as error:
                 self._mostrar_error_y_continuar(
                     f"Error de base de datos: {error}. Revisa el archivo .env y que MySQL este activo."

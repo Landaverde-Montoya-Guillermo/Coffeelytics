@@ -8,7 +8,7 @@ from consola_ui import (
     limpiar_pantalla, pausar, seleccionar_con_flechas,
     imprimir_encabezado_sesion, pedir_nombre_cliente,
     pedir_monto_efectivo, _imprimir_guia, _input_centrado,
-    _ancho, _prefijo, OperacionCancelada,
+    _ancho, _prefijo, OperacionCancelada, PasoAnterior,
     imprimir_bloque_centrado, _centrar_texto
 )
 
@@ -104,7 +104,7 @@ class ModalCobro:
                 )
                 if confirmacion.strip().upper() in ("0", "CANCELAR"):
                     raise OperacionCancelada()
-        except OperacionCancelada:
+        except (OperacionCancelada, PasoAnterior):
             print(Color.aviso("Operacion cancelada. No se registro la venta."))
             pausar()
             return False

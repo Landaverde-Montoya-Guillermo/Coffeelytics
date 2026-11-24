@@ -264,7 +264,7 @@ INSERT INTO categoria_producto VALUES
 
 INSERT INTO metodo_pago VALUES
 ('EFEC', 'Efectivo'),
-('TARJ', 'Tarjeta Crédito/Débito'),
+('TARJ', 'Tarjeta Crédito/Débito'),I
 ('TRAN', 'Transferencia Electrónica');
 
 INSERT INTO unidad_medida VALUES

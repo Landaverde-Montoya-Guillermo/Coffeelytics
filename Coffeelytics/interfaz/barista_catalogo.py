@@ -4,7 +4,7 @@ from interfaz.estilos import Color
 from consola_ui import (
     limpiar_pantalla, pausar, seleccionar_con_flechas,
     imprimir_encabezado_sesion, imprimir_tabla,
-    pedir_cantidad_carrito, pedir_input_centrado, OperacionCancelada,
+    pedir_cantidad_carrito, pedir_input_centrado, OperacionCancelada, PasoAnterior,
     _centrar_texto
 )
 from interfaz.visor_cliente import renderizar_visor_coffeelytics
@@ -78,6 +78,8 @@ class BaristaCatalogo:
                 )))
                 pausar()
                 termino = ""
+        except PasoAnterior:
+            return
         except Exception as error:
             print(Color.error(str(error)))
             pausar()
@@ -253,7 +255,7 @@ class BaristaCatalogo:
                     print(Color.ok(f"{cant}x {producto.nombre} agregado al carrito."))
                     pausar()
                     return
-            except OperacionCancelada:
+            except (OperacionCancelada, PasoAnterior):
                 print(Color.aviso("Operacion cancelada. No se agrego el producto al carrito."))
                 pausar()
                 return

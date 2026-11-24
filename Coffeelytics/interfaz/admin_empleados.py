@@ -5,7 +5,8 @@ from consola_ui import (
     imprimir_encabezado_sesion, imprimir_tabla,
     pedir_correo, pedir_nombre_propio, pedir_rfc,
     pedir_telefono,
-    _imprimir_guia, _input_centrado, _ancho, _prefijo, OperacionCancelada
+    _imprimir_guia, _input_centrado, _verificar_cancelacion,
+    _ancho, _prefijo, OperacionCancelada, PasoAnterior
 )
 
 
@@ -99,115 +100,94 @@ class AdminEmpleados:
             pausar()
             return
 
+        datos = {}
+        paso = 1
         try:
-            while True:
+            while paso <= 8:
                 try:
-                    nombre = pedir_nombre_propio(prompt="Nombre(s)", ejemplo="Maria")
-                    break
+                    if paso == 1:
+                        datos["nombre"] = pedir_nombre_propio(prompt="Nombre(s)", ejemplo="Maria")
+                    elif paso == 2:
+                        datos["apell1"] = pedir_nombre_propio(
+                            prompt="Primer apellido", ejemplo="Garcia"
+                        )
+                    elif paso == 3:
+                        _imprimir_guia(
+                            "Segundo apellido del empleado (opcional)",
+                            "Texto libre, maximo 50 caracteres. ENTER para omitir.",
+                            "Lopez",
+                            "Se ajusta a Formato Titulo."
+                        )
+                        raw_apell2 = _input_centrado("Segundo apellido (ENTER si no aplica)")
+                        _verificar_cancelacion(raw_apell2)
+                        apell2 = raw_apell2.title()
+                        if len(apell2) > 50:
+                            raise ValueError("El segundo apellido no puede superar 50 caracteres.")
+                        datos["apell2"] = apell2
+                    elif paso == 4:
+                        rfc = pedir_rfc()
+                        for empleado in empleados_existentes:
+                            if rfc.upper() == str(empleado.get("rfc", "")).upper():
+                                raise ValueError(f"El RFC '{rfc}' ya esta registrado.")
+                        datos["rfc"] = rfc
+                    elif paso == 5:
+                        datos["tel"] = pedir_telefono()
+                    elif paso == 6:
+                        correo = pedir_correo()
+                        for empleado in empleados_existentes:
+                            if correo.lower() == str(empleado.get("correo", "")).lower():
+                                raise ValueError(f"El correo '{correo}' ya esta registrado.")
+                        datos["correo"] = correo
+                    elif paso == 7:
+                        _imprimir_guia(
+                            "Contrasena inicial de acceso",
+                            "Minimo 4 caracteres, sin espacios",
+                            "cof2024",
+                            "El empleado podra usarla de inmediato al iniciar sesion."
+                        )
+                        contra = _input_centrado("Contrasena inicial (minimo 4 chars)")
+                        _verificar_cancelacion(contra)
+                        if len(contra) < 4 or " " in contra:
+                            raise ValueError(
+                                "Contrasena invalida. Debe tener al menos 4 caracteres y no incluir espacios.")
+                        datos["contra"] = contra
+                    elif paso == 8:
+                        if forzar_barista:
+                            datos["rol"] = "BARI"
+                            print(Color.info("Rol asignado automaticamente: Barista."))
+                        else:
+                            enc = imprimir_encabezado_sesion(
+                                self.usuario,
+                                breadcrumb=["Inicio", "Panel Admin", "Gestion de Empleados",
+                                            "Alta", "Rol"]
+                            )
+                            opts = ["Barista", "Administrador Secundario", "<< Paso anterior",
+                                    "<< Cancelar"]
+                            idx = seleccionar_con_flechas("Rol del nuevo empleado", opts, enc)
+                            if idx == 3:
+                                return
+                            datos["rol"] = "BARI" if idx == 0 else "ADMN"
+                    paso += 1
+                except PasoAnterior:
+                    if paso == 1:
+                        return
+                    paso -= 1
                 except ValueError as error:
                     print(Color.error(str(error)))
                     pausar()
-
-            while True:
-                try:
-                    apell1 = pedir_nombre_propio(prompt="Primer apellido", ejemplo="Garcia")
-                    break
-                except ValueError as error:
-                    print(Color.error(str(error)))
-                    pausar()
-
-            while True:
-                try:
-                    _imprimir_guia(
-                        "Segundo apellido del empleado (opcional)",
-                        "Texto libre, maximo 50 caracteres. ENTER para omitir.",
-                        "Lopez",
-                        "Se ajusta a Formato Titulo."
-                    )
-                    raw_a2 = _input_centrado("Segundo apellido (ENTER si no aplica)")
-                    if raw_a2.strip().upper() in ("0", "CANCELAR"):
-                        raise OperacionCancelada()
-                    apell2 = raw_a2.strip().title()
-                    if len(apell2) > 50:
-                        raise ValueError("El segundo apellido no puede superar 50 caracteres.")
-                    break
-                except ValueError as error:
-                    print(Color.error(str(error)))
-                    pausar()
-
-            while True:
-                try:
-                    rfc = pedir_rfc()
-                    rfc_repetido = False
-                    for empleado in empleados_existentes:
-                        if rfc.upper() == str(empleado.get("rfc", "")).upper():
-                            rfc_repetido = True
-                    if rfc_repetido:
-                        raise ValueError(f"El RFC '{rfc}' ya esta registrado.")
-                    break
-                except ValueError as error:
-                    print(Color.error(str(error)))
-                    pausar()
-
-            while True:
-                try:
-                    tel = pedir_telefono()
-                    break
-                except ValueError as error:
-                    print(Color.error(str(error)))
-                    pausar()
-
-            while True:
-                try:
-                    correo = pedir_correo()
-                    correo_repetido = False
-                    for empleado in empleados_existentes:
-                        if correo.lower() == str(empleado.get("correo", "")).lower():
-                            correo_repetido = True
-                    if correo_repetido:
-                        raise ValueError(f"El correo '{correo}' ya esta registrado.")
-                    break
-                except ValueError as error:
-                    print(Color.error(str(error)))
-                    pausar()
-
-            while True:
-                try:
-                    _imprimir_guia(
-                        "Contrasena inicial de acceso",
-                        "Minimo 4 caracteres, sin espacios",
-                        "cof2024",
-                        "El empleado podra usarla de inmediato al iniciar sesion."
-                    )
-                    raw_contra = _input_centrado("Contrasena inicial (minimo 4 chars)")
-                    if raw_contra.strip().upper() in ("0", "CANCELAR"):
-                        raise OperacionCancelada()
-                    contra = raw_contra.strip()
-                    if len(contra) < 4 or " " in contra:
-                        raise ValueError(
-                            "Contrasena invalida. Debe tener al menos 4 caracteres y no incluir espacios.")
-                    break
-                except ValueError as error:
-                    print(Color.error(str(error)))
-                    pausar()
-
-            if forzar_barista:
-                rol = "BARI"
-                print(Color.info("Rol asignado automaticamente: Barista."))
-            else:
-                enc = imprimir_encabezado_sesion(
-                    self.usuario,
-                    breadcrumb=["Inicio", "Panel Admin", "Gestion de Empleados", "Alta", "Rol"]
-                )
-                opts = ["Barista", "Administrador Secundario", "<< Cancelar"]
-                idx = seleccionar_con_flechas("Rol del nuevo empleado", opts, enc)
-                if idx == 2:
-                    return
-                rol = "BARI" if idx == 0 else "ADMN"
-        except OperacionCancelada:
+        except (OperacionCancelada, PasoAnterior):
             print(Color.aviso("Operacion cancelada. No se creo el empleado."))
             pausar()
             return
+
+        nombre = datos["nombre"]
+        apell1 = datos["apell1"]
+        apell2 = datos["apell2"]
+        rfc = datos["rfc"]
+        tel = datos["tel"]
+        correo = datos["correo"]
+        contra = datos["contra"]
+        rol = datos["rol"]
 
         while True:
             try:
@@ -264,7 +244,7 @@ class AdminEmpleados:
                                 pausar()
                     else:
                         return
-                except OperacionCancelada:
+                except (OperacionCancelada, PasoAnterior):
                     print(Color.aviso("Operacion cancelada. No se creo el empleado."))
                     pausar()
                     return

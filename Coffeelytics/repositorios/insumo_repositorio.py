@@ -3,9 +3,26 @@ from repositorios.base_repositorios import BaseRepositorio
 
 class InsumoRepositorio(BaseRepositorio):
 
+    def listar_estantes(self):
+        self._cursor.execute("""
+            SELECT codigo, capacidad, secciones
+            FROM estante
+            ORDER BY codigo
+        """)
+        return self._cursor.fetchall()
+
+    def obtener_numero_secciones(self, codigo_estante):
+        self._cursor.execute("""
+            SELECT secciones
+            FROM estante
+            WHERE codigo = %s
+        """, (codigo_estante,))
+        return self._cursor.fetchone()
+
     def listar_todos(self):
         self._cursor.execute("""
-            SELECT i.codigo, i.nombre, i.stockActual, i.stockMin, u.abreviatura,
+            SELECT i.codigo, i.nombre, i.stockActual, i.stockMin,
+                   u.codigo AS unidad_codigo, u.abreviatura,
                    ci.nombre AS categoria
             FROM insumo i
             INNER JOIN unidad_medida u ON i.unidad = u.codigo
@@ -52,7 +69,8 @@ class InsumoRepositorio(BaseRepositorio):
 
     def obtener_insumos_receta(self):
         self._cursor.execute("""
-            SELECT i.codigo, i.nombre, i.stockActual, i.stockMin, u.abreviatura
+            SELECT i.codigo, i.nombre, i.stockActual, i.stockMin,
+                   u.codigo AS unidad_codigo, u.abreviatura
             FROM insumo i
             INNER JOIN unidad_medida u ON i.unidad = u.codigo
             WHERE i.categoria <> %s

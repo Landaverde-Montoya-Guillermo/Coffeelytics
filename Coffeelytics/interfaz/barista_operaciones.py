@@ -5,7 +5,7 @@ from consola_ui import (
     limpiar_pantalla, pausar, seleccionar_con_flechas,
     imprimir_encabezado_sesion,
     pedir_numero_positivo, pedir_motivo,
-    _ancho, _prefijo, OperacionCancelada
+    _ancho, _prefijo, OperacionCancelada, PasoAnterior
 )
 
 
@@ -31,70 +31,82 @@ class BaristaOperaciones:
             pausar()
             return
 
-        # Tabla de referencia de insumos activos antes de elegir el insumo a mermar.
-        filas_ins = [(i["codigo"], i["nombre"], i["stockActual"], i["abreviatura"]) for i in insumos]
-        enc = "\n".join([
-            imprimir_encabezado_sesion(
-                self.usuario,
-                breadcrumb=["Inicio", "Panel Barista", "Registrar Merma", "Selecciona insumo"]
-            ),
-            tabla_centrada("INSUMOS ACTIVOS", ["CODIGO", "INSUMO", "STOCK ACTUAL", "UNIDAD"], filas_ins),
-        ])
-        opts_i = [
-            f"{i['codigo']:<12} {i['nombre']:<26} Categoria: {i['categoria']:<22} "
-            f"Stock: {i['stockActual']} {i['abreviatura']}"
-            for i in insumos
-        ] + ["<< Cancelar y regresar"]
-        idx_i = seleccionar_con_flechas("REGISTRAR MERMA - Selecciona insumo", opts_i, enc)
-        if idx_i == len(insumos):
-            return
-        ins = insumos[idx_i]
-
-        enc = imprimir_encabezado_sesion(
-            self.usuario,
-            breadcrumb=["Inicio", "Panel Barista", "Registrar Merma", "Tipo de merma"]
-        )
-        opts_t = [t["nombre"] for t in tipos_merma] + ["<< Cancelar y regresar"]
-        idx_t = seleccionar_con_flechas("Tipo de merma", opts_t, enc)
-        if idx_t == len(tipos_merma):
-            return
-        tipo = tipos_merma[idx_t]
-
-        limpiar_pantalla()
-        print(imprimir_encabezado_sesion(
-            self.usuario,
-            breadcrumb=["Inicio", "Panel Barista", "Registrar Merma"]
-        ))
-        pfx = _prefijo(_ancho())
-        print(f"\n{pfx}  {Color.titulo('REGISTRAR MERMA')}")
-        print(f"{pfx}  Insumo: {Color.CARAMELO}{ins['nombre']}{Color.RESET}  "
-              f"Categoria: {ins['categoria']}")
-        print(f"{pfx}  Stock actual disponible: {Color.CARAMELO}"
-              f"{ins['stockActual']} {ins['abreviatura']}{Color.RESET}")
-        print(f"{pfx}  Tipo:   {Color.CARAMELO}{tipo['nombre']}{Color.RESET}\n")
-
+        paso = 1
         try:
-            while True:
+            while paso <= 4:
                 try:
-                    cantidad = pedir_numero_positivo(
-                        prompt="Cantidad a dar de baja",
-                        unidad=ins["abreviatura"],
-                        ejemplo=f"{min(1, float(ins['stockActual'])):.1f}",
-                        stock_max=float(ins["stockActual"]),
-                        nombre_campo="cantidad de merma"
-                    )
-                    break
+                    if paso == 1:
+                        filas_ins = [
+                            (i["codigo"], i["nombre"], i["stockActual"], i["abreviatura"])
+                            for i in insumos
+                        ]
+                        enc = "\n".join([
+                            imprimir_encabezado_sesion(
+                                self.usuario,
+                                breadcrumb=["Inicio", "Panel Barista", "Registrar Merma",
+                                            "Selecciona insumo"]
+                            ),
+                            tabla_centrada("INSUMOS ACTIVOS",
+                                           ["CODIGO", "INSUMO", "STOCK ACTUAL", "UNIDAD"],
+                                           filas_ins),
+                        ])
+                        opts = [
+                            f"{i['codigo']:<12} {i['nombre']:<26} "
+                            f"Categoria: {i['categoria']:<22} "
+                            f"Stock: {i['stockActual']} {i['abreviatura']}"
+                            for i in insumos
+                        ] + ["<< Volver al menu anterior"]
+                        idx = seleccionar_con_flechas(
+                            "REGISTRAR MERMA - Selecciona insumo", opts, enc
+                        )
+                        if idx == len(insumos):
+                            return
+                        ins = insumos[idx]
+                    elif paso == 2:
+                        enc = imprimir_encabezado_sesion(
+                            self.usuario,
+                            breadcrumb=["Inicio", "Panel Barista", "Registrar Merma",
+                                        "Tipo de merma"]
+                        )
+                        opts = [t["nombre"] for t in tipos_merma] + [
+                            "<< Paso anterior", "<< Cancelar y regresar"
+                        ]
+                        idx = seleccionar_con_flechas("Tipo de merma", opts, enc)
+                        if idx == len(tipos_merma) + 1:
+                            return
+                        tipo = tipos_merma[idx]
+                    elif paso == 3:
+                        limpiar_pantalla()
+                        print(imprimir_encabezado_sesion(
+                            self.usuario,
+                            breadcrumb=["Inicio", "Panel Barista", "Registrar Merma", "Cantidad"]
+                        ))
+                        pfx = _prefijo(_ancho())
+                        print(f"\n{pfx}  {Color.titulo('REGISTRAR MERMA')}")
+                        print(f"{pfx}  Insumo: {Color.CARAMELO}{ins['nombre']}{Color.RESET}  "
+                              f"Categoria: {ins['categoria']}")
+                        print(f"{pfx}  Stock actual disponible: {Color.CARAMELO}"
+                              f"{ins['stockActual']} {ins['abreviatura']}{Color.RESET}")
+                        print(f"{pfx}  Tipo:   {Color.CARAMELO}{tipo['nombre']}{Color.RESET}\n")
+                        cantidad = pedir_numero_positivo(
+                            prompt="Cantidad a dar de baja",
+                            unidad=ins["abreviatura"],
+                            ejemplo=f"{min(1, float(ins['stockActual'])):.1f}",
+                            stock_max=float(ins["stockActual"]),
+                            nombre_campo="cantidad de merma",
+                            unidad_codigo=ins["unidad_codigo"]
+                        )
+                    elif paso == 4:
+                        motivo = pedir_motivo(ejemplo="Derrame accidental en barra")
+                    paso += 1
+                except PasoAnterior:
+                    if paso == 1:
+                        return
+                    paso -= 1
                 except ValueError as error:
                     print(Color.error(str(error)))
                     pausar()
-            while True:
-                try:
-                    motivo = pedir_motivo(ejemplo="Derrame accidental en barra")
-                    break
-                except ValueError as error:
-                    print(Color.error(str(error)))
-                    pausar()
-        except OperacionCancelada:
+        except (OperacionCancelada, PasoAnterior):
             print(Color.aviso("Operacion cancelada. No se registro la merma."))
             pausar()
             return
@@ -141,13 +153,14 @@ class BaristaOperaciones:
                             unidad=ins["abreviatura"],
                             ejemplo=f"{min(1, float(ins['stockActual'])):.1f}",
                             stock_max=float(ins["stockActual"]),
-                            nombre_campo="cantidad de merma"
+                            nombre_campo="cantidad de merma",
+                            unidad_codigo=ins["unidad_codigo"]
                         )
                         break
                     except ValueError as error:
                         print(Color.error(str(error)))
                         pausar()
-            except OperacionCancelada:
+            except (OperacionCancelada, PasoAnterior):
                 print(Color.aviso("Operacion cancelada. No se registro la merma."))
                 pausar()
                 return
@@ -194,13 +207,14 @@ class BaristaOperaciones:
                         ejemplo="1" if ins["unidad_codigo"] in UNIDADES_CONTEO_ENTERO else "50",
                         stock_max=float(ins["stockActual"]),
                         nombre_campo="cantidad a surtir",
-                        solo_entero=ins["unidad_codigo"] in UNIDADES_CONTEO_ENTERO
+                        solo_entero=ins["unidad_codigo"] in UNIDADES_CONTEO_ENTERO,
+                        unidad_codigo=ins["unidad_codigo"]
                     )
                     break
                 except ValueError as error:
                     print(Color.error(str(error)))
                     pausar()
-        except OperacionCancelada:
+        except (OperacionCancelada, PasoAnterior):
             print(Color.aviso("Operacion cancelada. No se surtio la mesa."))
             pausar()
             return
@@ -244,13 +258,14 @@ class BaristaOperaciones:
                             ejemplo="1" if ins["unidad_codigo"] in UNIDADES_CONTEO_ENTERO else "50",
                             stock_max=float(ins["stockActual"]),
                             nombre_campo="cantidad a surtir",
-                            solo_entero=ins["unidad_codigo"] in UNIDADES_CONTEO_ENTERO
+                            solo_entero=ins["unidad_codigo"] in UNIDADES_CONTEO_ENTERO,
+                            unidad_codigo=ins["unidad_codigo"]
                         )
                         break
                     except ValueError as error:
                         print(Color.error(str(error)))
                         pausar()
-            except OperacionCancelada:
+            except (OperacionCancelada, PasoAnterior):
                 print(Color.aviso("Operacion cancelada. No se surtio la mesa."))
                 pausar()
                 return

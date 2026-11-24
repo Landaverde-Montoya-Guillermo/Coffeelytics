@@ -7,7 +7,8 @@ from consola_ui import (
     imprimir_encabezado_sesion, imprimir_tabla,
     pedir_codigo, pedir_nombre_propio,
     pedir_numero_positivo, pedir_precio,
-    _imprimir_guia, _input_centrado, _ancho, _prefijo, OperacionCancelada,
+    _imprimir_guia, _input_centrado, _verificar_cancelacion,
+    _ancho, _prefijo, OperacionCancelada, PasoAnterior,
     imprimir_bloque_centrado, _centrar_texto
 )
 from documentos.generador_documentos import lineas_comprobante_compra, ancho_comprobante
@@ -188,103 +189,89 @@ class AdminInventario:
             pausar()
             return
 
-        while True:
-            try:
-                enc = imprimir_encabezado_sesion(
-                    self.usuario,
-                    breadcrumb=["Inicio", "Panel Admin", "Registrar Compra", "Proveedor"]
-                )
-                opts = [f"{p['codigo']:<10} {p['nombre']:<30} {p['ciudad']}"
-                        for p in proveedores] + ["<< Cancelar y regresar"]
-                idx = seleccionar_con_flechas("REGISTRAR COMPRA - Selecciona proveedor", opts, enc)
-                if idx == len(proveedores):
-                    return
-                prov = proveedores[idx]
-                break
-            except Exception as error:
-                print(Color.error(str(error)))
-                pausar()
-
-        while True:
-            try:
-                filas_ins = [(i["codigo"], i["nombre"], i["stockActual"], i["abreviatura"])
-                             for i in insumos]
-                enc = "\n".join([
-                    imprimir_encabezado_sesion(
-                        self.usuario,
-                        breadcrumb=["Inicio", "Panel Admin", "Registrar Compra", "Insumo"]
-                    ),
-                    tabla_centrada("INSUMOS DEL CATALOGO", ["CODIGO", "INSUMO", "STOCK ACTUAL", "UNIDAD"],
-                                   filas_ins),
-                ])
-                opts2 = [f"{i['codigo']:<12} {i['nombre']:<30} Stock: {i['stockActual']} {i['abreviatura']}"
-                         for i in insumos] + ["<< Cancelar y regresar"]
-                idx2 = seleccionar_con_flechas("Selecciona insumo a comprar", opts2, enc)
-                if idx2 == len(insumos):
-                    return
-                ins = insumos[idx2]
-                break
-            except Exception as error:
-                print(Color.error(str(error)))
-                pausar()
-
-        limpiar_pantalla()
-        print(imprimir_encabezado_sesion(
-            self.usuario,
-            breadcrumb=["Inicio", "Panel Admin", "Registrar Compra", "Datos"]
-        ))
-        pfx = _prefijo(_ancho())
-        print(f"\n{pfx}  {Color.titulo('REGISTRAR COMPRA A PROVEEDOR')}")
-        print(f"{pfx}  Proveedor: {Color.CARAMELO}{prov['nombre']}{Color.RESET}  "
-              f"Ciudad: {prov['ciudad']}")
-        print(f"{pfx}  Insumo:    {Color.CARAMELO}{ins['nombre']}{Color.RESET}\n")
-        print(Color.info("El IVA se calculara automaticamente: 8% si el proveedor es de frontera, "
-                         "16% si es del interior del pais."))
-        print()
-
+        paso = 1
         try:
-            while True:
+            while paso <= 5:
                 try:
-                    cantidad = pedir_numero_positivo(
-                        prompt="Cantidad comprada",
-                        unidad=ins["abreviatura"],
-                        ejemplo="1000",
-                        nombre_campo="cantidad"
-                    )
-                    break
+                    if paso == 1:
+                        enc = imprimir_encabezado_sesion(
+                            self.usuario,
+                            breadcrumb=["Inicio", "Panel Admin", "Registrar Compra", "Proveedor"]
+                        )
+                        opts = [f"{p['codigo']:<10} {p['nombre']:<30} {p['ciudad']}"
+                                for p in proveedores] + ["<< Volver al menu anterior"]
+                        idx = seleccionar_con_flechas(
+                            "REGISTRAR COMPRA - Selecciona proveedor", opts, enc
+                        )
+                        if idx == len(proveedores):
+                            return
+                        prov = proveedores[idx]
+                    elif paso == 2:
+                        filas_ins = [
+                            (i["codigo"], i["nombre"], i["stockActual"], i["abreviatura"])
+                            for i in insumos
+                        ]
+                        enc = "\n".join([
+                            imprimir_encabezado_sesion(
+                                self.usuario,
+                                breadcrumb=["Inicio", "Panel Admin", "Registrar Compra", "Insumo"]
+                            ),
+                            tabla_centrada("INSUMOS DEL CATALOGO",
+                                           ["CODIGO", "INSUMO", "STOCK ACTUAL", "UNIDAD"],
+                                           filas_ins),
+                        ])
+                        opts = [
+                            f"{i['codigo']:<12} {i['nombre']:<30} "
+                            f"Stock: {i['stockActual']} {i['abreviatura']}"
+                            for i in insumos
+                        ] + ["<< Paso anterior", "<< Cancelar compra"]
+                        idx = seleccionar_con_flechas("Selecciona insumo a comprar", opts, enc)
+                        if idx == len(insumos) + 1:
+                            return
+                        ins = insumos[idx]
+                    elif paso == 3:
+                        limpiar_pantalla()
+                        print(imprimir_encabezado_sesion(
+                            self.usuario,
+                            breadcrumb=["Inicio", "Panel Admin", "Registrar Compra", "Cantidad"]
+                        ))
+                        cantidad = pedir_numero_positivo(
+                            prompt="Cantidad comprada", unidad=ins["abreviatura"],
+                            ejemplo="1000", nombre_campo="cantidad",
+                            unidad_codigo=ins["unidad_codigo"]
+                        )
+                    elif paso == 4:
+                        precio_unit = pedir_precio(ejemplo="0.85")
+                    elif paso == 5:
+                        tasa, sub, iva_v, total = self.compra_srv.calcular_totales_previos(
+                            prov.get("ciudad", ""), cantidad, precio_unit
+                        )
+                        pfx = _prefijo(_ancho())
+                        print(f"\n{pfx}  Subtotal: ${sub:.2f}  IVA ({int(tasa*100)}%): ${iva_v:.2f}  "
+                              f"Total: {Color.CARAMELO}${total:.2f}{Color.RESET}")
+                        metodos = [("EFEC", "Efectivo"), ("TARJ", "Tarjeta"),
+                                   ("TRAN", "Transferencia Electronica")]
+                        enc = imprimir_encabezado_sesion(
+                            self.usuario,
+                            breadcrumb=["Inicio", "Panel Admin", "Registrar Compra",
+                                        "Metodo de pago"]
+                        )
+                        opts = [m[1] for m in metodos] + [
+                            "<< Paso anterior", "<< Cancelar compra"
+                        ]
+                        idx = seleccionar_con_flechas("Metodo de pago al proveedor", opts, enc)
+                        if idx == len(metodos) + 1:
+                            return
+                        cod_pago = metodos[idx][0]
+                    paso += 1
+                except PasoAnterior:
+                    if paso == 1:
+                        return
+                    paso -= 1
                 except ValueError as error:
                     print(Color.error(str(error)))
                     pausar()
-
-            while True:
-                try:
-                    precio_unit = pedir_precio(ejemplo="0.85")
-                    break
-                except ValueError as error:
-                    print(Color.error(str(error)))
-                    pausar()
-
-            tasa, sub, iva_v, total = self.compra_srv.calcular_totales_previos(
-                prov.get("ciudad", ""), cantidad, precio_unit
-            )
-            print(f"\n{pfx}  Subtotal: ${sub:.2f}  IVA ({int(tasa*100)}%): ${iva_v:.2f}  "
-                  f"Total: {Color.CARAMELO}${total:.2f}{Color.RESET}")
-
-            metodos = [("EFEC", "Efectivo"), ("TARJ", "Tarjeta"),
-                       ("TRAN", "Transferencia Electronica")]
-            enc3 = imprimir_encabezado_sesion(
-                self.usuario,
-                breadcrumb=["Inicio", "Panel Admin", "Registrar Compra", "Metodo de pago"]
-            )
-            idx_m = seleccionar_con_flechas(
-                "Metodo de pago al proveedor",
-                [m[1] for m in metodos] + ["<< Cancelar compra"],
-                enc3
-            )
-            if idx_m == len(metodos):
-                return
-            cod_pago = metodos[idx_m][0]
-        except OperacionCancelada:
+        except (OperacionCancelada, PasoAnterior):
             print(Color.aviso("Operacion cancelada. No se registro la compra."))
             pausar()
             return
@@ -397,6 +384,7 @@ class AdminInventario:
             insumos_existentes = self.inventario_srv.listar_todos_insumos()
             unidades = self.inventario_srv.listar_unidades_medida()
             categorias = self.inventario_srv.listar_categorias_insumo()
+            estantes = self.inventario_srv.listar_estantes()
         except Exception as error:
             print(Color.error(str(error)))
             pausar()
@@ -405,165 +393,174 @@ class AdminInventario:
             print(Color.error("No hay unidades de medida o categorias de insumo disponibles."))
             pausar()
             return
+        if not estantes:
+            print(Color.error("No hay estantes registrados. Registra un estante antes de crear insumos."))
+            pausar()
+            return
 
+        paso = 1
         try:
-            while True:
+            while paso <= 8:
                 try:
-                    codigo = pedir_codigo(
-                        prompt="Codigo del insumo", longitud_max=6, ejemplo="INS008"
-                    )
-                    codigo_repetido = False
-                    for insumo in insumos_existentes:
-                        if codigo.upper() == insumo["codigo"].upper():
-                            codigo_repetido = True
-                    if codigo_repetido:
-                        raise ValueError(f"El codigo '{codigo}' ya esta registrado.")
-                    break
+                    if paso == 1:
+                        codigo = pedir_codigo(
+                            prompt="Codigo del insumo", longitud_max=6, ejemplo="INS008"
+                        )
+                        for insumo in insumos_existentes:
+                            if codigo.upper() == insumo["codigo"].upper():
+                                raise ValueError(f"El codigo '{codigo}' ya esta registrado.")
+                    elif paso == 2:
+                        nombre = pedir_nombre_propio(
+                            prompt="Nombre del insumo", ejemplo="Leche Entera"
+                        )
+                    elif paso == 3:
+                        opciones_unidad = " o ".join(
+                            item["codigo"].upper() for item in unidades
+                        )
+                        ejemplos_unidad = ", ".join(
+                            f'{item["codigo"].upper()} ({item["abreviatura"]})'
+                            for item in unidades
+                        )
+                        _imprimir_guia(
+                            "Codigo de unidad de medida",
+                            "Codigo corto en mayusculas registrado en la BD",
+                            ejemplos_unidad,
+                            f"Opciones validas: {opciones_unidad}. Debe coincidir exactamente."
+                        )
+                        unidad = _input_centrado(
+                            f"Codigo de unidad (ej. {opciones_unidad})"
+                        )
+                        _verificar_cancelacion(unidad)
+                        unidad = unidad.upper()
+                        if not unidad:
+                            raise ValueError("El codigo de unidad no puede estar vacio.")
+                        unidad_abreviatura = ""
+                        for item in unidades:
+                            if unidad == item["codigo"].upper():
+                                unidad_abreviatura = item["abreviatura"]
+                        if not unidad_abreviatura:
+                            raise ValueError(f"La unidad '{unidad}' no existe.")
+                    elif paso == 4:
+                        stock_ini = pedir_numero_positivo(
+                            prompt="Stock inicial", unidad=unidad_abreviatura,
+                            ejemplo="500", nombre_campo="stock inicial",
+                            unidad_codigo=unidad
+                        )
+                    elif paso == 5:
+                        stock_min = pedir_numero_positivo(
+                            prompt="Stock minimo de alerta", unidad=unidad_abreviatura,
+                            ejemplo="100", nombre_campo="stock minimo",
+                            unidad_codigo=unidad
+                        )
+                    elif paso == 6:
+                        filas_estantes = [
+                            (e["codigo"], f'Estante {e["codigo"]}', e["capacidad"],
+                             f'1-{e["secciones"]}' if e["secciones"] else "Ninguna")
+                            for e in estantes
+                        ]
+                        imprimir_tabla(
+                            "ESTANTES DISPONIBLES",
+                            ["CODIGO", "DESCRIPCION", "CAPACIDAD", "SECCIONES DISPONIBLES"],
+                            filas_estantes
+                        )
+                        codigos_estantes = ", ".join(str(e["codigo"]) for e in estantes)
+                        _imprimir_guia(
+                            "Codigo del estante donde se almacenara el insumo",
+                            "Codigo numerico registrado en la base de datos",
+                            codigos_estantes,
+                            "Elige un estante de la tabla superior."
+                        )
+                        codigo_estante = _input_centrado(
+                            f"Codigo de estante (ej. {codigos_estantes})"
+                        ).strip().upper()
+                        _verificar_cancelacion(codigo_estante)
+                        estante_valido = False
+                        for item in estantes:
+                            if codigo_estante == str(item["codigo"]).strip().upper():
+                                estante_valido = True
+                        if not estante_valido:
+                            raise ValueError(
+                                f"El estante '{codigo_estante}' no existe. "
+                                "Revisa la tabla superior e ingresa un codigo valido."
+                            )
+                        estante = int(codigo_estante)
+                    elif paso == 7:
+                        secciones = self.inventario_srv.listar_secciones_almacen(estante)
+                        if not secciones:
+                            print(Color.error(
+                                f"El estante '{estante}' no tiene secciones disponibles."
+                            ))
+                            pausar()
+                            paso = 6
+                            continue
+                        filas_secciones = [(s["codigo"], s["nombre"]) for s in secciones]
+                        imprimir_tabla(
+                            f"SECCIONES DISPONIBLES DEL ESTANTE {estante}",
+                            ["CODIGO", "DESCRIPCION"],
+                            filas_secciones
+                        )
+                        codigos_secciones = ", ".join(str(s["codigo"]) for s in secciones)
+                        _imprimir_guia(
+                            "Codigo de la seccion dentro del estante",
+                            "Numero de seccion disponible para el estante elegido",
+                            codigos_secciones,
+                            "Elige una seccion de la tabla superior."
+                        )
+                        codigo_seccion = _input_centrado(
+                            f"Codigo de seccion (ej. {codigos_secciones})"
+                        ).strip().upper()
+                        _verificar_cancelacion(codigo_seccion)
+                        seccion_valida = False
+                        for item in secciones:
+                            if codigo_seccion == str(item["codigo"]).strip().upper():
+                                seccion_valida = True
+                        if not seccion_valida:
+                            raise ValueError(
+                                f"La seccion '{codigo_seccion}' no existe en el estante "
+                                f"{estante}. Revisa la tabla superior e ingresa un codigo valido."
+                            )
+                        seccion = int(codigo_seccion)
+                    elif paso == 8:
+                        ejemplos_categoria = ", ".join(
+                            f'{item["codigo"].upper()} ({item["nombre"]})'
+                            for item in categorias
+                        )
+                        opciones_categoria = " o ".join(
+                            item["codigo"].upper() for item in categorias
+                        )
+                        _imprimir_guia(
+                            "Categoria del insumo en el almacen",
+                            "Codigo de categoria registrado en la BD",
+                            ejemplos_categoria,
+                            f"Opciones validas: {opciones_categoria}. Debe coincidir exactamente."
+                        )
+                        cat_ins = _input_centrado(
+                            f"Categoria de insumo (ej. {opciones_categoria})"
+                        )
+                        _verificar_cancelacion(cat_ins)
+                        cat_ins = cat_ins.upper()
+                        if not cat_ins:
+                            raise ValueError("El codigo de categoria no puede estar vacio.")
+                        categoria_valida = False
+                        for item in categorias:
+                            if cat_ins == item["codigo"].upper():
+                                categoria_valida = True
+                        if not categoria_valida:
+                            raise ValueError(f"La categoria '{cat_ins}' no existe.")
+                    paso += 1
+                except PasoAnterior:
+                    if paso == 1:
+                        return
+                    paso -= 1
                 except ValueError as error:
                     print(Color.error(str(error)))
                     pausar()
-
-            while True:
-                try:
-                    nombre = pedir_nombre_propio(prompt="Nombre del insumo", ejemplo="Leche Entera")
-                    break
-                except ValueError as error:
-                    print(Color.error(str(error)))
-                    pausar()
-
-            while True:
-                try:
-                    stock_ini = pedir_numero_positivo(
-                        prompt="Stock inicial", unidad="", ejemplo="500",
-                        nombre_campo="stock inicial"
-                    )
-                    break
-                except ValueError as error:
-                    print(Color.error(str(error)))
-                    pausar()
-
-            while True:
-                try:
-                    stock_min = pedir_numero_positivo(
-                        prompt="Stock minimo de alerta", unidad="", ejemplo="100",
-                        nombre_campo="stock minimo"
-                    )
-                    break
-                except ValueError as error:
-                    print(Color.error(str(error)))
-                    pausar()
-
-            while True:
-                try:
-                    _imprimir_guia(
-                        "Seccion del almacen donde se guarda el insumo",
-                        "Texto libre, maximo 30 caracteres",
-                        "Refrigeracion o Bodega seca",
-                        "Permite ubicar fisicamente el insumo en almacen."
-                    )
-                    raw_sec = _input_centrado("Seccion de almacen")
-                    if raw_sec.strip().upper() in ("0", "CANCELAR"):
-                        raise OperacionCancelada()
-                    seccion = raw_sec.strip().title()
-                    if not seccion:
-                        raise ValueError("La seccion del almacen no puede estar vacia.")
-                    if len(seccion) > 30:
-                        raise ValueError("La seccion no puede superar 30 caracteres.")
-                    break
-                except ValueError as error:
-                    print(Color.error(str(error)))
-                    pausar()
-
-            while True:
-                try:
-                    opciones_unidad = " o ".join(
-                        item["codigo"].upper() for item in unidades
-                    )
-                    ejemplos_unidad = ", ".join(
-                        f'{item["codigo"].upper()} ({item["abreviatura"]})'
-                        for item in unidades
-                    )
-                    _imprimir_guia(
-                        "Codigo de unidad de medida",
-                        "Codigo corto en mayusculas registrado en la BD",
-                        ejemplos_unidad,
-                        f"Opciones validas: {opciones_unidad}. Debe coincidir exactamente."
-                    )
-                    raw_uni = _input_centrado(
-                        f"Codigo de unidad (ej. {opciones_unidad})"
-                    )
-                    if raw_uni.strip().upper() in ("0", "CANCELAR"):
-                        raise OperacionCancelada()
-                    unidad = raw_uni.strip().upper()
-                    if not unidad:
-                        raise ValueError("El codigo de unidad no puede estar vacio.")
-                    unidad_valida = False
-                    for item in unidades:
-                        if unidad == item["codigo"].upper():
-                            unidad_valida = True
-                    if not unidad_valida:
-                        raise ValueError(f"La unidad '{unidad}' no existe.")
-                    break
-                except ValueError as error:
-                    print(Color.error(str(error)))
-                    pausar()
-
-            while True:
-                try:
-                    _imprimir_guia(
-                        "Estante o ubicacion exacta dentro de la seccion",
-                        "Texto libre, maximo 20 caracteres",
-                        "Estante-A3 o Frio-2",
-                        "Referencia visual para el personal de almacen."
-                    )
-                    raw_est = _input_centrado("Estante / ubicacion")
-                    if raw_est.strip().upper() in ("0", "CANCELAR"):
-                        raise OperacionCancelada()
-                    estante = raw_est.strip()
-                    if not estante:
-                        raise ValueError("El estante o ubicacion no puede estar vacio.")
-                    if len(estante) > 20:
-                        raise ValueError("El estante o ubicacion no puede superar 20 caracteres.")
-                    break
-                except ValueError as error:
-                    print(Color.error(str(error)))
-                    pausar()
-
-            while True:
-                try:
-                    ejemplos_categoria = ", ".join(
-                        f'{item["codigo"].upper()} ({item["nombre"]})'
-                        for item in categorias
-                    )
-                    opciones_categoria = " o ".join(
-                        item["codigo"].upper() for item in categorias
-                    )
-                    _imprimir_guia(
-                        "Categoria del insumo en el almacen",
-                        "Codigo de categoria registrado en la BD",
-                        ejemplos_categoria,
-                        f"Opciones validas: {opciones_categoria}. Debe coincidir exactamente."
-                    )
-                    raw_cat = _input_centrado(
-                        f"Categoria de insumo (ej. {opciones_categoria})"
-                    )
-                    if raw_cat.strip().upper() in ("0", "CANCELAR"):
-                        raise OperacionCancelada()
-                    cat_ins = raw_cat.strip().upper()
-                    if not cat_ins:
-                        raise ValueError("El codigo de categoria no puede estar vacio.")
-                    categoria_valida = False
-                    for item in categorias:
-                        if cat_ins == item["codigo"].upper():
-                            categoria_valida = True
-                    if not categoria_valida:
-                        raise ValueError(f"La categoria '{cat_ins}' no existe.")
-                    break
-                except ValueError as error:
-                    print(Color.error(str(error)))
-                    pausar()
-        except OperacionCancelada:
+        except (OperacionCancelada, PasoAnterior):
             print(Color.aviso("Operacion cancelada. No se registro el insumo."))
+            pausar()
+            return
+        except Exception as error:
+            print(Color.error(str(error)))
             pausar()
             return
 
@@ -608,7 +605,7 @@ class AdminInventario:
                     except ValueError as error:
                         print(Color.error(str(error)))
                         pausar()
-            except OperacionCancelada:
+            except (OperacionCancelada, PasoAnterior):
                 print(Color.aviso("Operacion cancelada. No se registro el insumo."))
                 pausar()
                 return

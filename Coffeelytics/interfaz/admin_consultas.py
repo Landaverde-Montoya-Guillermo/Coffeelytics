@@ -7,7 +7,7 @@ from consola_ui import (
     imprimir_encabezado_sesion, imprimir_tabla,
     pedir_entero_positivo, pedir_fecha, pedir_monto_contado,
     imprimir_bloque_centrado, _centrar_texto,
-    _ancho, _prefijo, OperacionCancelada
+    _ancho, _prefijo, OperacionCancelada, PasoAnterior
 )
 from config.reglas import IVA_FRONTERA
 from consola_ui import tabla_centrada
@@ -139,7 +139,7 @@ class AdminConsultas:
             try:
                 contado = pedir_monto_contado(esperado)
                 break
-            except OperacionCancelada:
+            except (OperacionCancelada, PasoAnterior):
                 print(Color.aviso("Corte cancelado. No se genero el comprobante."))
                 pausar()
                 return
@@ -225,7 +225,7 @@ class AdminConsultas:
                     print(Color.aviso("Esta venta no tiene productos registrados. No se genero reporte."))
                 pausar()
                 return
-            except OperacionCancelada:
+            except (OperacionCancelada, PasoAnterior):
                 return
             except Exception as error:
                 print(Color.error(str(error)))
@@ -240,6 +240,14 @@ class AdminConsultas:
             ))
             print(f"\n  {Color.titulo('C2 - DETALLE DE COMPRA')}\n")
             try:
+                compras = self.reporte_srv.listar_compras_registradas()
+                cols_compras = ["FOLIO", "FECHA", "PROVEEDOR", "EMPLEADO / USUARIO", "TOTAL"]
+                filas_compras = [
+                    (c["folio"], c["fecha"], c["proveedor"], c["empleado"],
+                     f"${c['total']:.2f}")
+                    for c in compras
+                ]
+                imprimir_tabla("COMPRAS REGISTRADAS", cols_compras, filas_compras)
                 folio = pedir_entero_positivo(prompt="Numero de folio de compra", ejemplo="1")
                 enc_compra, lineas = self.reporte_srv.consulta_2_detalle_compra(folio)
                 if not enc_compra:
@@ -272,7 +280,7 @@ class AdminConsultas:
                 )
                 pausar()
                 return
-            except OperacionCancelada:
+            except (OperacionCancelada, PasoAnterior):
                 return
             except Exception as error:
                 print(Color.error(str(error)))
@@ -293,7 +301,8 @@ class AdminConsultas:
             return
 
         # Historial de mermas: solo consulta. El registro lo hacen los baristas desde su menu.
-        cols = ["FECHA", "BARISTA", "INSUMO", "CANTIDAD", "MOTIVO"]
+        cols = ["FOLIO", "FECHA", "BARISTA", "COD. INSUMO", "INSUMO",
+                "CANTIDAD", "TIPO DE MERMA", "MOTIVO"]
 
         if idx == 0:
             try:
@@ -302,7 +311,8 @@ class AdminConsultas:
                 print(Color.error(str(error)))
                 pausar()
                 return
-            filas = [(m["fecha"], m["barista"], m["insumo"], m["cantidad"], m["motivo"])
+            filas = [(m["codigo"], m["fecha"], m["barista"], m["insumo_codigo"],
+                      m["insumo"], m["cantidad"], m["tipo_merma"], m["motivo"])
                      for m in mermas]
             limpiar_pantalla()
             print(imprimir_encabezado_sesion(
@@ -335,8 +345,9 @@ class AdminConsultas:
                         self.usuario,
                         breadcrumb=["Inicio", "Panel Admin", "Consultas", f"C3 - Merma #{folio}"]
                     ))
-                    filas = [(merma["fecha"], merma["barista"], merma["insumo"], merma["cantidad"],
-                              merma["motivo"])]
+                    filas = [(merma["codigo"], merma["fecha"], merma["barista"],
+                              merma["insumo_codigo"], merma["insumo"], merma["cantidad"],
+                              merma["tipo_merma"], merma["motivo"])]
                     imprimir_tabla(f"C3 - MERMA #{folio}", cols, filas)
                     self.reportes.reporte_generico(
                         f"Reporte_C3_Merma_{folio}",
@@ -346,7 +357,7 @@ class AdminConsultas:
                     )
                     pausar()
                     return
-                except OperacionCancelada:
+                except (OperacionCancelada, PasoAnterior):
                     return
                 except Exception as error:
                     print(Color.error(str(error)))
@@ -388,9 +399,11 @@ class AdminConsultas:
                         print(Color.error(str(error)))
                         pausar()
                 ventas = self.reporte_srv.consulta_4_ventas_por_empleado_fecha(emp["num"], fecha)
-                cols = ["Folio", "Fecha", "Cliente", "Metodo", "Total"]
-                filas = [(v["folio"], v["fecha"], v["nombreCliente"], v["metodoPago"],
-                          f"${v['total']:.2f}") for v in ventas]
+                cols = ["Folio", "Fecha", "Productos", "Empleado / Barista", "Cliente",
+                        "Metodo de pago", "Total"]
+                filas = [(v["folio"], v["fecha"], v["productos"], v["empleado"],
+                          v["nombreCliente"], v["metodoPago"], f"${v['total']:.2f}")
+                         for v in ventas]
                 limpiar_pantalla()
                 print(imprimir_encabezado_sesion(
                     self.usuario,
@@ -405,7 +418,7 @@ class AdminConsultas:
                 )
                 pausar()
                 return
-            except OperacionCancelada:
+            except (OperacionCancelada, PasoAnterior):
                 return
             except Exception as error:
                 print(Color.error(str(error)))

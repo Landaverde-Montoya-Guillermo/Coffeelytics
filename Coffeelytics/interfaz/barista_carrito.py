@@ -4,7 +4,7 @@ from consola_ui import (
     pausar, seleccionar_con_flechas,
     imprimir_encabezado_sesion, imprimir_tabla,
     _centrar_texto, limpiar_pantalla,
-    pedir_cantidad_a_quitar, OperacionCancelada
+    pedir_cantidad_a_quitar, OperacionCancelada, PasoAnterior
 )
 from interfaz.visor_cliente import renderizar_visor_coffeelytics
 from interfaz.modal_cobro import ModalCobro
@@ -109,7 +109,7 @@ class BaristaCarrito:
                 mensaje = f"'{producto.nombre}' eliminado del carrito."
             else:
                 mensaje = f"Se quitaron {cantidad} de '{producto.nombre}'. Quedan {disponible - cantidad}."
-        except OperacionCancelada:
+        except (OperacionCancelada, PasoAnterior):
             mensaje = "No se quito ninguna unidad."
             estilo = Color.aviso
         except ValueError as error:

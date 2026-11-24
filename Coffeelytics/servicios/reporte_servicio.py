@@ -89,6 +89,14 @@ class ReporteServicio:
             lineas = repo.detalle_compra_lineas(folio_compra)
             return enc, lineas
 
+    def listar_compras_registradas(self):
+        with transaccion(dictionary=True) as cursor:
+            repo = ConsultasRepositorio(cursor)
+            filas = repo.compras_registradas()
+        return [{"folio": f["folio"], "fecha": f["fecha"],
+                 "proveedor": f["proveedor"], "empleado": f["empleado"],
+                 "total": float(f["total"])} for f in filas]
+
     def consulta_3_mermas_semana(self):
         with transaccion(dictionary=True) as cursor:
             repo = ConsultasRepositorio(cursor)

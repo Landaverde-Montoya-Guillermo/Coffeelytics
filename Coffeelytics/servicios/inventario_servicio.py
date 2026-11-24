@@ -32,6 +32,25 @@ class InventarioServicio:
             repo = InsumoRepositorio(cursor)
             return repo.listar_todos()
 
+    def listar_estantes(self):
+        with transaccion(dictionary=True) as cursor:
+            repo = InsumoRepositorio(cursor)
+            return repo.listar_estantes()
+
+    def listar_secciones_almacen(self, codigo_estante):
+        with transaccion(dictionary=True) as cursor:
+            repo = InsumoRepositorio(cursor)
+            resultado = repo.obtener_numero_secciones(codigo_estante)
+
+        secciones = []
+        if resultado:
+            for codigo in range(1, int(resultado["secciones"]) + 1):
+                secciones.append({
+                    "codigo": codigo,
+                    "nombre": f"Seccion {codigo}",
+                })
+        return secciones
+
     def obtener_stock_general(self):
         with transaccion(dictionary=True) as cursor:
             repo = InsumoRepositorio(cursor)

@@ -114,6 +114,21 @@ class ConsultasRepositorio(BaseRepositorio):
         """, (folio_compra,))
         return self._cursor.fetchone()
 
+    def compras_registradas(self):
+        self._cursor.execute("""
+            SELECT c.codigo AS folio,
+                   DATE_FORMAT(c.fecha, '%d/%m/%Y') AS fecha,
+                   p.nombre AS proveedor,
+                   COALESCE(NULLIF(CONCAT_WS(' ', e.nombrePila, e.primApell, e.segApell), ''),
+                            'Sin asignar') AS empleado,
+                   c.total
+            FROM compra c
+            INNER JOIN proveedor p ON c.proveedor = p.codigo
+            INNER JOIN empleado e ON c.empleado = e.num
+            ORDER BY c.codigo DESC
+        """)
+        return self._cursor.fetchall()
+
     def detalle_compra_lineas(self, folio_compra):
         self._cursor.execute("""
             SELECT i.codigo, i.nombre, ic.precioUnitarioCom AS precio,
@@ -126,10 +141,11 @@ class ConsultasRepositorio(BaseRepositorio):
 
     def mermas_ultima_semana(self):
         self._cursor.execute("""
-            SELECT m.codigo, m.fecha, i.nombre AS insumo,
+            SELECT m.codigo, m.fecha, i.codigo AS insumo_codigo, i.nombre AS insumo,
                    CONCAT(m.cantidad,' ',u.abreviatura) AS cantidad,
                    tm.nombre AS tipo_merma, m.motivo,
-                   COALESCE(CONCAT(e.nombrePila,' ',e.primApell), 'Sin asignar') AS barista
+                   COALESCE(NULLIF(CONCAT_WS(' ', e.nombrePila, e.primApell, e.segApell), ''),
+                            'Sin asignar') AS barista
             FROM merma m
             INNER JOIN insumo i        ON m.insumo = i.codigo
             INNER JOIN unidad_medida u ON i.unidad = u.codigo
@@ -142,10 +158,11 @@ class ConsultasRepositorio(BaseRepositorio):
 
     def merma_por_folio(self, folio):
         self._cursor.execute("""
-            SELECT m.codigo, m.fecha, i.nombre AS insumo,
+            SELECT m.codigo, m.fecha, i.codigo AS insumo_codigo, i.nombre AS insumo,
                    CONCAT(m.cantidad,' ',u.abreviatura) AS cantidad,
                    tm.nombre AS tipo_merma, m.motivo,
-                   COALESCE(CONCAT(e.nombrePila,' ',e.primApell), 'Sin asignar') AS barista
+                   COALESCE(NULLIF(CONCAT_WS(' ', e.nombrePila, e.primApell, e.segApell), ''),
+                            'Sin asignar') AS barista
             FROM merma m
             INNER JOIN insumo i        ON m.insumo = i.codigo
             INNER JOIN unidad_medida u ON i.unidad = u.codigo
@@ -158,10 +175,19 @@ class ConsultasRepositorio(BaseRepositorio):
     def ventas_por_empleado_fecha(self, num_empleado, fecha_str):
         self._cursor.execute("""
             SELECT v.codigo AS folio, v.fecha, v.nombreCliente,
-                   m.descripcion AS metodoPago, v.total
+                   COALESCE(NULLIF(CONCAT_WS(' ', e.nombrePila, e.primApell, e.segApell), ''),
+                            'Sin asignar') AS empleado,
+                   COALESCE(GROUP_CONCAT(DISTINCT p.nombre ORDER BY p.nombre SEPARATOR ', '),
+                            'Sin productos') AS productos,
+                   COALESCE(m.descripcion, 'Sin metodo') AS metodoPago, v.total
             FROM venta v
-            INNER JOIN metodo_pago m ON v.metodoPago = m.codigo
+            LEFT JOIN empleado e ON v.empleado = e.num
+            LEFT JOIN prod_venta pv ON pv.venta = v.codigo
+            LEFT JOIN producto p ON pv.producto = p.codigo
+            LEFT JOIN metodo_pago m ON v.metodoPago = m.codigo
             WHERE v.empleado = %s AND DATE(v.fecha) = %s
+            GROUP BY v.codigo, v.fecha, v.nombreCliente, e.nombrePila, e.primApell,
+                     e.segApell, m.descripcion, v.total
             ORDER BY v.fecha DESC
         """, (num_empleado, fecha_str))
         return self._cursor.fetchall()
