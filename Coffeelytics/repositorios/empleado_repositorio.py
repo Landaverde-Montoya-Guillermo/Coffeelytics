@@ -54,3 +54,13 @@ class EmpleadoRepositorio(BaseRepositorio):
             ORDER BY e.num
         """)
         return self._cursor.fetchall()
+
+    def listar_baristas(self):
+        self._cursor.execute("""
+            SELECT e.num, CONCAT_WS(' ', e.nombrePila, e.primApell, e.segApell) AS nombre,
+                   e.correo
+            FROM empleado e
+            WHERE e.rol = 'BARS'
+            ORDER BY e.num
+        """)
+        return self._cursor.fetchall()

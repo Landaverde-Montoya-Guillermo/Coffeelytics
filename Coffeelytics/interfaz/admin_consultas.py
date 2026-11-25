@@ -5,7 +5,7 @@ from interfaz.estilos import Color
 from consola_ui import (
     limpiar_pantalla, pausar, seleccionar_con_flechas,
     imprimir_encabezado_sesion, imprimir_tabla,
-    pedir_entero_positivo, pedir_fecha, pedir_monto_contado,
+    pedir_entero_positivo, pedir_monto_contado,
     imprimir_bloque_centrado, _centrar_texto,
     _ancho, _prefijo, OperacionCancelada, PasoAnterior
 )
@@ -27,7 +27,7 @@ class AdminConsultas:
             "C1 - Detalle de venta por folio",
             "C2 - Detalle de compra por folio",
             "C3 - Mermas",
-            "C4 - Ventas por empleado y fecha",
+            "C4 - Ventas por barista y fecha",
             "C5 - Insumos de la receta de un producto",
             "Ventas por Barista (Resumen y Detalle)",
             "Corte de Caja del Dia (Resumen y Arqueo)",
@@ -367,52 +367,78 @@ class AdminConsultas:
         while True:
             limpiar_pantalla()
             try:
-                empleados = self.empleado_srv.listar_empleados()
-                if not empleados:
-                    print(Color.aviso("No hay empleados."))
+                baristas = self.empleado_srv.listar_baristas()
+                if not baristas:
+                    print(Color.aviso("No hay baristas registrados."))
                     pausar()
                     return
+                cols_baristas = ["ID", "NOMBRE COMPLETO", "CORREO / USUARIO"]
+                filas_baristas = [(b["num"], b["nombre"], b["correo"]) for b in baristas]
+                tabla_baristas = imprimir_tabla(
+                    "BARISTAS REGISTRADOS", cols_baristas, filas_baristas,
+                    retornar_texto=True
+                )
                 enc = imprimir_encabezado_sesion(
                     self.usuario,
-                    breadcrumb=["Inicio", "Panel Admin", "Consultas", "C4 - Ventas por empleado"]
+                    breadcrumb=["Inicio", "Panel Admin", "Consultas", "C4 - Ventas por barista"]
                 )
-                opts = [f"{e['num']:>4}  {e['nombre']:<30} {e['rol']}"
-                        for e in empleados] + ["<< Cancelar y regresar"]
-                idx = seleccionar_con_flechas("C4 - Selecciona empleado", opts, enc)
-                if idx == len(empleados):
+                enc = "\n".join([enc, tabla_baristas])
+                opts = [f"{b['num']:>4}  {b['nombre']:<30} {b['correo']}"
+                        for b in baristas] + ["<< Cancelar y regresar"]
+                idx = seleccionar_con_flechas("C4 - Selecciona barista", opts, enc)
+                if idx == len(baristas):
                     return
-                emp = empleados[idx]
+                emp = baristas[idx]
+                ventas_barista = self.reporte_srv.detalle_ventas_barista(emp["num"])
                 limpiar_pantalla()
                 print(imprimir_encabezado_sesion(
                     self.usuario,
                     breadcrumb=["Inicio", "Panel Admin", "Consultas", "C4", emp["nombre"]]
                 ))
                 pfx = _prefijo(_ancho())
-                print(f"\n{pfx}  {Color.titulo('C4 - VENTAS POR EMPLEADO Y FECHA')}")
-                print(f"{pfx}  Empleado: {Color.CARAMELO}{emp['nombre']}{Color.RESET}\n")
-                print(self._tabla_ultimos_folios())  # referencia antes de pedir la fecha
+                print(f"\n{pfx}  {Color.titulo('C4 - VENTAS POR BARISTA Y FECHA')}")
+                print(f"{pfx}  Barista: {Color.CARAMELO}{emp['nombre']}{Color.RESET}\n")
+                cols_ventas = ["CODIGO", "FECHA", "CLIENTE", "METODO DE PAGO", "TOTAL"]
+                filas_ventas = [
+                    (v["folio"], v["fecha"], v["cliente"], v["metodo"], f"${v['total']:.2f}")
+                    for v in ventas_barista
+                ]
+                imprimir_tabla(f"VENTAS DE {emp['nombre']}", cols_ventas, filas_ventas)
+                if not ventas_barista:
+                    print(Color.aviso("Este barista aun no tiene ventas registradas."))
+                    pausar()
+                    return
                 while True:
                     try:
-                        fecha = pedir_fecha()
+                        fecha = input("Fecha a consultar (YYYY-MM-DD): ").strip()
+                        if len(fecha) != 10:
+                            raise ValueError
+                        datetime.datetime.strptime(fecha, "%Y-%m-%d")
                         break
-                    except ValueError as error:
-                        print(Color.error(str(error)))
+                    except ValueError:
+                        print(Color.error(
+                            "Fecha invalida. Ingresa una fecha existente con formato YYYY-MM-DD."
+                        ))
                         pausar()
                 ventas = self.reporte_srv.consulta_4_ventas_por_empleado_fecha(emp["num"], fecha)
-                cols = ["Folio", "Fecha", "Productos", "Empleado / Barista", "Cliente",
-                        "Metodo de pago", "Total"]
-                filas = [(v["folio"], v["fecha"], v["productos"], v["empleado"],
-                          v["nombreCliente"], v["metodoPago"], f"${v['total']:.2f}")
-                         for v in ventas]
+                filas = [
+                    (v["folio"], v["fecha"], v["nombreCliente"], v["metodoPago"],
+                     f"${v['total']:.2f}")
+                    for v in ventas
+                ]
                 limpiar_pantalla()
                 print(imprimir_encabezado_sesion(
                     self.usuario,
-                    breadcrumb=["Inicio", "Panel Admin", "Consultas", "C4", emp["nombre"], fecha]
+                    breadcrumb=["Inicio", "Panel Admin", "Consultas", "C4",
+                                emp["nombre"], fecha]
                 ))
-                imprimir_tabla(f"C4 - VENTAS DE {emp['nombre']} EL {fecha}", cols, filas)
+                imprimir_tabla(f"C4 - VENTAS DE {emp['nombre']} EL {fecha}",
+                               cols_ventas, filas)
+                if not ventas:
+                    print(Color.aviso("Este barista no tiene ventas en la fecha seleccionada."))
                 self.reportes.reporte_generico(
                     f"Reporte_C4_{emp['num']}_{fecha.replace('-', '')}",
-                    "VENTAS POR EMPLEADO",
+                    "VENTAS POR BARISTA",
                     cols, filas,
                     subtitulo=f"{emp['nombre']} | {fecha}"
                 )

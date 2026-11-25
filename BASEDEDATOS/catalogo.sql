@@ -1,3 +1,4 @@
+-- Active: 1792597882538@@127.0.0.1@3306@bd_coffeelytics
 -- ROL
 INSERT INTO ROL (codigo, nombre) VALUES
 ('ADMN', 'Administrador'),
@@ -385,3 +386,124 @@ INSERT INTO con_insum (insumo, mesa, cantidad) VALUES
 ('SOBSTE', 'STEVI', 1.00),
 ('TOALLH', 'TOALL', 1.00),
 ('AZUMAS', 'MASCA', 1.00);
+
+-- =========================================================================
+-- 1. CABECERA DE VENTAS (30 ventas: codigos 27 al 56)
+-- =========================================================================
+INSERT INTO venta (codigo, fecha, nombreCliente, total, metodoPago, empleado) VALUES
+-- 10 ventas para Barista 8 (Mateo Guzmán)
+(27, '2026-10-03 08:30:00', 'Mostrador', 48.60, 'EFEC', 8),
+(28, '2026-10-07 10:15:00', 'Mostrador', 135.00, 'TDEB', 8),
+(29, '2026-10-12 16:40:00', 'Mostrador', 64.80, 'TRAN', 8),
+(30, '2026-10-18 09:20:00', 'Mostrador', 113.40, 'EFEC', 8),
+(31, '2026-10-25 13:10:00', 'Mostrador', 81.00, 'TDEB', 8),
+(32, '2026-11-02 08:45:00', 'Mostrador', 129.60, 'EFEC', 8),
+(33, '2026-11-06 11:30:00', 'Mostrador', 81.00, 'TRAN', 8),
+(34, '2026-11-11 17:05:00', 'Mostrador', 145.80, 'TDEB', 8),
+(35, '2026-11-16 09:50:00', 'Mostrador', 75.60, 'EFEC', 8),
+(36, '2026-11-21 15:25:00', 'Mostrador', 115.56, 'TRAN', 8)
+
+-- 10 ventas para Barista 9 (Camila Reyes)
+INSERT INTO venta (codigo, fecha, nombreCliente, total, metodoPago, empleado) VALUES
+(37, '2026-10-04 09:00:00', 'Mostrador', 70.20, 'TDEB', 9),
+(38, '2026-10-09 12:20:00', 'Mostrador', 97.20, 'EFEC', 9),
+(39, '2026-10-14 15:45:00', 'Mostrador', 135.00, 'TRAN', 9),
+(40, '2026-10-20 08:15:00', 'Mostrador', 37.80, 'EFEC', 9),
+(41, '2026-10-27 14:30:00', 'Mostrador', 118.80, 'TDEB', 9),
+(42, '2026-11-03 10:40:00', 'Mostrador', 90.72, 'EFEC', 9),
+(43, '2026-11-08 16:10:00', 'Mostrador', 151.20, 'TRAN', 9),
+(44, '2026-11-13 09:35:00', 'Mostrador', 64.80, 'EFEC', 9),
+(45, '2026-11-18 13:50:00', 'Mostrador', 113.40, 'TDEB', 9),
+(46, '2026-11-22 11:15:00', 'Mostrador', 81.00, 'EFEC', 9)
+
+-- 10 ventas para Barista 10 (Sebastián Vargas)
+INSERT INTO venta (codigo, fecha, nombreCliente, total, metodoPago, empleado) VALUES
+(47, '2026-10-05 10:10:00', 'Mostrador', 81.00, 'EFEC', 10),
+(48, '2026-10-10 14:25:00', 'Mostrador', 129.60, 'TDEB', 10),
+(49, '2026-10-16 08:55:00', 'Mostrador', 60.48, 'TRAN', 10),
+(50, '2026-10-22 17:20:00', 'Mostrador', 162.00, 'EFEC', 10),
+(51, '2026-10-29 11:45:00', 'Mostrador', 97.20, 'TDEB', 10),
+(52, '2026-11-04 09:15:00', 'Mostrador', 113.40, 'EFEC', 10),
+(53, '2026-11-09 15:00:00', 'Mostrador', 75.60, 'TRAN', 10),
+(54, '2026-11-14 12:35:00', 'Mostrador', 135.00, 'TDEB', 10),
+(55, '2026-11-19 08:40:00', 'Mostrador', 81.00, 'EFEC', 10),
+(56, '2026-11-23 16:50:00', 'Mostrador', 118.80, 'TRAN', 10);
+
+-- =========================================================================
+-- 2. DETALLE DE PRODUCTOS POR VENTA (Ajusta el nombre de la tabla si difiere)
+-- =========================================================================
+INSERT INTO prod_venta (venta, producto, cantidad, precioUnitarioVenta, subtotal, totalIVA, total) VALUES
+-- Detalle Barista 8 (ventas 27 a 36)
+(27, 'AMER', 1, 45.00, 45.00, 3.60, 48.60),
+(28, 'CAPU', 1, 60.00, 60.00, 4.80, 64.80),
+(28, 'LATT', 1, 65.00, 65.00, 5.20, 70.20),
+(29, 'CAPU', 1, 60.00, 60.00, 4.80, 64.80),
+(30, 'LATT', 1, 65.00, 65.00, 5.20, 70.20),
+(30, 'TISA', 1, 35.00, 35.00, 2.80, 37.80),
+(30, 'GCHO', 1, 5.00, 5.00, 0.40, 5.40),
+(31, 'MTCH', 1, 75.00, 75.00, 6.00, 81.00),
+(32, 'CAPU', 2, 60.00, 120.00, 9.60, 129.60),
+(33, 'LAVE', 1, 75.00, 75.00, 6.00, 81.00),
+(34, 'LATT', 1, 65.00, 65.00, 5.20, 70.20),
+(34, 'LVAI', 1, 70.00, 70.00, 5.60, 75.60),
+(35, 'LVAI', 1, 70.00, 70.00, 5.60, 75.60),
+(36, 'LATT', 1, 65.00, 65.00, 5.20, 70.20),
+(36, 'ESPR', 1, 42.00, 42.00, 3.36, 45.36)
+
+-- Detalle Barista 9 (ventas 37 a 46)
+INSERT INTO prod_venta (venta, producto, cantidad, precioUnitarioVenta, subtotal, totalIVA, total) VALUES
+(37, 'LATT', 1, 65.00, 65.00, 5.20, 70.20),
+(38, 'AMER', 2, 45.00, 90.00, 7.20, 97.20),
+(39, 'CAPU', 1, 60.00, 60.00, 4.80, 64.80),
+(39, 'LATT', 1, 65.00, 65.00, 5.20, 70.20),
+(40, 'TISA', 1, 35.00, 35.00, 2.80, 37.80),
+(41, 'MTCH', 1, 75.00, 75.00, 6.00, 81.00),
+(41, 'TISA', 1, 35.00, 35.00, 2.80, 37.80),
+(42, 'ESPR', 2, 42.00, 84.00, 6.72, 90.72),
+(43, 'LVAI', 2, 70.00, 140.00, 11.20, 151.20),
+(44, 'CAPU', 1, 60.00, 60.00, 4.80, 64.80),
+(45, 'LALM', 1, 75.00, 75.00, 6.00, 81.00),
+(45, 'GCHO', 1, 30.00, 30.00, 2.40, 32.40),
+(46, 'MTCH', 1, 75.00, 75.00, 6.00, 81.00)
+
+-- Detalle Barista 10 (ventas 47 a 56)
+INSERT INTO prod_venta (venta, producto, cantidad, precioUnitarioVenta, subtotal, totalIVA, total) VALUESNecesito solucionar dos problemas en el panel del administrador de Coffeelytics: el registro del rol de empleado (error de llave foranea en MySQL) y el filtro por barista y fecha en la consulta de ventas.
+
+CONTEXTO DEL PROYECTO Y RESTRICCIONES ACADEMICAS:
+- Proyecto: Coffeelytics (sistema de cafeteria en consola/TUI en Python + MySQL).
+- Arquitectura de 4 capas: interfaz/, servicios/, repositorios/, datos/ (sin ORM, consultas SQL directas con `dictionary=True`).
+- Nivel de codigo requerido: Programacion Orientada a Objetos (POO) basica/intermedia de estudiante de 3er cuatrimestre. Usa clases, metodos claros, listas, diccionarios, ciclos while/for, try/except e if/else simples. Evita patrones avanzados (sin decoradores, sin lambdas complejas, sin generadores).
+- UI en consola: Usar exclusivamente las funciones existentes de `consola_ui.py` (`limpiar_pantalla`, `pausar`, `seleccionar_con_flechas`, `imprimir_encabezado_sesion`, `imprimir_tabla`, `_ancho`, `_prefijo`, `OperacionCancelada`, `PasoAnterior`) y `Color` de `interfaz/estilos.py`.
+
+CAMBIOS EXACTOS A REALIZAR:
+
+1. Corregir registro de rol de empleado por texto (`#file:admin_empleados.py` y su servicio/repositorio):
+   - En la base de datos (`#file:BD.sql`), la tabla `rol` solo tiene dos PK validas: `ADMN` (Administrador) y `BARS` (Barista).
+   - Permite que el usuario ingrese el rol mediante texto (`input`), mostrando claramente en el mensaje guia las PK validas:
+     `Rol del empleado (ADMN = Administrador | BARS = Barista): `
+   - Convierte la entrada a mayusculas y limpia espacios (`.strip().upper()`). Acepta tambien si el usuario escribe `"ADMINISTRADOR"` o `"BARISTA"` convirtiendolo automaticamente a `"ADMN"` o `"BARS"`.
+   - Valida en ese mismo paso (dentro de un `while True:`) que el codigo resultante sea exactamente `'ADMN'` o `'BARS'` antes de llegar al `INSERT` en MySQL. Si escribe otra cosa, muestra `Color.error("Rol invalido. Debes ingresar ADMN (Administrador) o BARS (Barista).")`, haz `pausar()` y repite solo ese paso sin perder los datos ya capturados.
+   - Verifica en el repositorio/servicio que la columna del rol en `INSERT INTO empleado` reciba esa PK (`'ADMN'` o `'BARS'`) y no un numero o texto largo que cause error `1452` de MySQL.
+
+2. Filtrar consulta de ventas solo por Baristas y luego por fecha especifica (`#file:admin_consultas.py` y su servicio/repositorio):
+   - Paso 1 (Seleccionar Barista):
+     * Consulta unicamente a los empleados cuyo rol sea Barista (`WHERE rol = 'BARS'`), excluyendo administradores.
+     * Muestra una tabla (`imprimir_tabla`) con solo esos baristas (Codigo/ID, Nombre completo, Correo/Usuario) y permite seleccionar uno (ya sea con `seleccionar_con_flechas` o ingresando su codigo validado).
+   - Paso 2 (Ver ventas de ese barista y filtrar por fecha):
+     * Muestra en una tabla (`imprimir_tabla`) UNICAMENTE las ventas realizadas por ese barista seleccionado (`WHERE v.empleado = %s`), ordenadas por fecha, mostrando codigo de venta, fecha, cliente, metodo de pago y total.
+     * Permite elegir una fecha especifica (mostrando las fechas en las que ese barista tiene ventas o pidiendo la fecha `YYYY-MM-DD`) para filtrar y ver las ventas de ese barista en esa fecha exacta (o el detalle de una venta de esa fecha)
+(47, 'LALM', 1, 75.00, 75.00, 6.00, 81.00),
+(48, 'CAPU', 2, 60.00, 120.00, 9.60, 129.60),
+(49, 'GAVE', 2, 28.00, 56.00, 4.48, 60.48),
+(50, 'MTCH', 1, 75.00, 75.00, 6.00, 81.00),
+(50, 'LAVE', 1, 75.00, 75.00, 6.00, 81.00),
+(51, 'AMER', 2, 45.00, 90.00, 7.20, 97.20),
+(52, 'LATT', 1, 65.00, 65.00, 5.20, 70.20),
+(52, 'TISA', 1, 35.00, 35.00, 2.80, 37.80),
+(52, 'GCHO', 1, 5.00, 5.00, 0.40, 5.40),
+(53, 'LVAI', 1, 70.00, 70.00, 5.60, 75.60),
+(54, 'CAPU', 1, 60.00, 60.00, 4.80, 64.80),
+(54, 'LATT', 1, 65.00, 65.00, 5.20, 70.20),
+(55, 'LAVE', 1, 75.00, 75.00, 6.00, 81.00),
+(56, 'MTCH', 1, 75.00, 75.00, 6.00, 81.00),
+(56, 'TISA', 1, 35.00, 35.00, 2.80, 37.80);

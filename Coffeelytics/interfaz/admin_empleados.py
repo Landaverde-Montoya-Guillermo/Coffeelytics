@@ -153,20 +153,31 @@ class AdminEmpleados:
                         datos["contra"] = contra
                     elif paso == 8:
                         if forzar_barista:
-                            datos["rol"] = "BARI"
+                            datos["rol"] = "BARS"
                             print(Color.info("Rol asignado automaticamente: Barista."))
                         else:
-                            enc = imprimir_encabezado_sesion(
-                                self.usuario,
-                                breadcrumb=["Inicio", "Panel Admin", "Gestion de Empleados",
-                                            "Alta", "Rol"]
-                            )
-                            opts = ["Barista", "Administrador Secundario", "<< Paso anterior",
-                                    "<< Cancelar"]
-                            idx = seleccionar_con_flechas("Rol del nuevo empleado", opts, enc)
-                            if idx == 3:
-                                return
-                            datos["rol"] = "BARI" if idx == 0 else "ADMN"
+                            while True:
+                                _imprimir_guia(
+                                    "Rol del empleado",
+                                    "ADMN = Administrador | BARS = Barista",
+                                    "BARS",
+                                    "Tambien puedes escribir ADMINISTRADOR o BARISTA."
+                                )
+                                rol = _input_centrado(
+                                    "Rol del empleado (ADMN = Administrador | BARS = Barista)"
+                                ).strip().upper()
+                                _verificar_cancelacion(rol)
+                                if rol == "ADMINISTRADOR":
+                                    rol = "ADMN"
+                                elif rol == "BARISTA":
+                                    rol = "BARS"
+                                if rol in ("ADMN", "BARS"):
+                                    datos["rol"] = rol
+                                    break
+                                print(Color.error(
+                                    "Rol invalido. Debes ingresar ADMN (Administrador) o BARS (Barista)."
+                                ))
+                                pausar()
                     paso += 1
                 except PasoAnterior:
                     if paso == 1:

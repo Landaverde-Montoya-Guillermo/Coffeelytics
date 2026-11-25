@@ -47,6 +47,7 @@ class ConsultasRepositorio(BaseRepositorio):
                    COALESCE(SUM(v.total), 0) AS total
             FROM empleado e
             LEFT JOIN venta v ON v.empleado = e.num
+            WHERE e.rol = 'BARS'
             GROUP BY e.num, e.nombrePila, e.primApell
             ORDER BY total DESC, e.num
         """)
@@ -61,9 +62,10 @@ class ConsultasRepositorio(BaseRepositorio):
                    m.descripcion   AS metodo,
                    v.total
             FROM venta v
+            INNER JOIN empleado e ON v.empleado = e.num
             INNER JOIN metodo_pago m ON v.metodoPago = m.codigo
-            WHERE v.empleado = %s
-            ORDER BY v.codigo DESC
+            WHERE v.empleado = %s AND e.rol = 'BARS'
+            ORDER BY v.fecha, v.codigo
         """, (num_empleado,))
         return self._cursor.fetchall()
 
@@ -181,13 +183,13 @@ class ConsultasRepositorio(BaseRepositorio):
                             'Sin productos') AS productos,
                    COALESCE(m.descripcion, 'Sin metodo') AS metodoPago, v.total
             FROM venta v
-            LEFT JOIN empleado e ON v.empleado = e.num
+            INNER JOIN empleado e ON v.empleado = e.num
             LEFT JOIN prod_venta pv ON pv.venta = v.codigo
             LEFT JOIN producto p ON pv.producto = p.codigo
             LEFT JOIN metodo_pago m ON v.metodoPago = m.codigo
-            WHERE v.empleado = %s AND DATE(v.fecha) = %s
+            WHERE v.empleado = %s AND e.rol = 'BARS' AND DATE(v.fecha) = %s
             GROUP BY v.codigo, v.fecha, v.nombreCliente, e.nombrePila, e.primApell,
                      e.segApell, m.descripcion, v.total
-            ORDER BY v.fecha DESC
+            ORDER BY v.fecha, v.codigo
         """, (num_empleado, fecha_str))
         return self._cursor.fetchall()

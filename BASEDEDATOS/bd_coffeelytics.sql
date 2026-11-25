@@ -247,12 +247,12 @@ CREATE TABLE rec_insum (
 -- 4. INSERCIÓN DE DATOS INICIALES Y DE PRUEBA (PARA EXPOSICIÓN)
 -- ============================================================================
 
-INSERT INTO rol VALUES ('ADMN', 'Administrador'), ('BARI', 'Barista');
+INSERT INTO rol VALUES ('ADMN', 'Administrador'), ('BARS', 'Barista');
 
 INSERT INTO empleado (nombrePila, primApell, segApell, RFC, telefono, correo, contrasena, rol) VALUES
 ('Guillermo', 'Landaverde', 'Montoya', 'LAMG010101A1', '6641234567', 'admin@coffeelytics.com', 'admin123', 'ADMN'),
-('Cristian', 'Gomez', 'Santos', 'GOSC020202B2', '6647654321', 'barista@coffeelytics.com', 'barista123', 'BARI'),
-('Jorge', 'Huizar', 'Ruvalcaba', 'HURJ030303C3', '6649876543', 'jorge@coffeelytics.com', '1234', 'BARI');
+('Cristian', 'Gomez', 'Santos', 'GOSC020202B2', '6647654321', 'barista@coffeelytics.com', 'barista123', 'BARS'),
+('Jorge', 'Huizar', 'Ruvalcaba', 'HURJ030303C3', '6649876543', 'jorge@coffeelytics.com', '1234', 'BARS');
 
 INSERT INTO estatus_producto (nombre) VALUES ('Activo'), ('No Disponible');
 
