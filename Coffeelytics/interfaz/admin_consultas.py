@@ -439,7 +439,7 @@ class AdminConsultas:
                 self.reportes.reporte_generico(
                     f"Reporte_C4_{emp['num']}_{fecha.replace('-', '')}",
                     "VENTAS POR BARISTA",
-                    cols, filas,
+                    cols_ventas, filas,
                     subtitulo=f"{emp['nombre']} | {fecha}"
                 )
                 pausar()
