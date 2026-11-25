@@ -1,0 +1,30 @@
+╔══════════════════════════════════════════════════════════╗
+║               COFFEELYTICS - CORTE DE CAJA               ║
+║                 RESUMEN Y ARQUEO DEL DIA                 ║
+╠══════════════════════════════════════════════════════════╣
+║ Fecha:              2026-11-21 23:38:28                  ║
+║ Realizo el corte:   Guillermo Landaverde                 ║
+╟──────────────────────────────────────────────────────────╢
+║ VENTAS POR METODO DE PAGO                                ║
+║ Efectivo - 3 operacion(es)                               ║
+║    Subtotal:        $358.00                              ║
+║    IVA (8%):        $28.64                               ║
+║    Total:           $386.64                              ║
+║ Tarjeta Crédito/Débito - 1 operacion(es)                 ║
+║    Subtotal:        $750.00                              ║
+║    IVA (8%):        $60.00                               ║
+║    Total:           $810.00                              ║
+╟──────────────────────────────────────────────────────────╢
+║ GRAN TOTAL DEL DIA                                       ║
+║ Operaciones:        4                                    ║
+║                           Subtotal:             $1108.00 ║
+║                           IVA (8%):               $88.64 ║
+║                           GRAN TOTAL:           $1196.64 ║
+╟──────────────────────────────────────────────────────────╢
+║                    ARQUEO DE EFECTIVO                    ║
+║ Efectivo Esperado (Sistema): $386.64                     ║
+║ Efectivo Contado (Fisico):   $1200.00                    ║
+║              [!] SOBRANTE EN CAJA: +$813.36              ║
+╟──────────────────────────────────────────────────────────╢
+║               Respaldo .txt no disponible                ║
+╚══════════════════════════════════════════════════════════╝

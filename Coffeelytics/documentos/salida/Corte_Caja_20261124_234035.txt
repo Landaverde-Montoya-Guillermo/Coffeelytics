@@ -1,0 +1,26 @@
+╔══════════════════════════════════════════════════════════╗
+║               COFFEELYTICS - CORTE DE CAJA               ║
+║                 RESUMEN Y ARQUEO DEL DIA                 ║
+╠══════════════════════════════════════════════════════════╣
+║ Fecha:              2026-11-24 23:40:35                  ║
+║ Realizo el corte:   Guillermo Landaverde                 ║
+╟──────────────────────────────────────────────────────────╢
+║ VENTAS POR METODO DE PAGO                                ║
+║ Transferencia Electrónica - 1 operacion(es)              ║
+║    Subtotal:        $124.08                              ║
+║    IVA (8%):        $9.92                                ║
+║    Total:           $134.00                              ║
+╟──────────────────────────────────────────────────────────╢
+║ GRAN TOTAL DEL DIA                                       ║
+║ Operaciones:        1                                    ║
+║                           Subtotal:              $124.08 ║
+║                           IVA (8%):                $9.92 ║
+║                           GRAN TOTAL:            $134.00 ║
+╟──────────────────────────────────────────────────────────╢
+║                    ARQUEO DE EFECTIVO                    ║
+║ Efectivo Esperado (Sistema): $0.00                       ║
+║ Efectivo Contado (Fisico):   $0.00                       ║
+║                [OK] CAJA CUADRADA EXACTA                 ║
+╟──────────────────────────────────────────────────────────╢
+║               Respaldo .txt no disponible                ║
+╚══════════════════════════════════════════════════════════╝

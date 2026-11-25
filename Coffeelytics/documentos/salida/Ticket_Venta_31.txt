@@ -1,0 +1,25 @@
+╔══════════════════════════════════════════════════════════╗
+║              COFFEELYTICS - PUNTO DE VENTA               ║
+║                 TICKET OFICIAL DE VENTA                  ║
+╠══════════════════════════════════════════════════════════╣
+║ Folio de venta:     #00031                               ║
+║ Fecha y hora:       2026-11-22 16:54:16                  ║
+║ Atendido por:       Cristian Gomez                       ║
+║ Cliente:            Irvin                                ║
+╟──────────────────────────────────────────────────────────╢
+║ CANT │ PRODUCTO                  │    P.UNIT │   IMPORTE ║
+║ ─────┼───────────────────────────┼───────────┼────────── ║
+║    2 │ Latte Vainilla            │    $65.00 │   $130.00 ║
+║    2 │ Capuchino Cremoso         │    $60.00 │   $120.00 ║
+║    2 │ Galleta Chispas           │    $35.00 │    $70.00 ║
+╟──────────────────────────────────────────────────────────╢
+║                           TOTAL A PAGAR:         $320.00 ║
+╟──────────────────────────────────────────────────────────╢
+║ Metodo de pago:     Efectivo                             ║
+║ Efectivo recibido:  $350.00                              ║
+║ Cambio entregado:   $30.00                               ║
+╟──────────────────────────────────────────────────────────╢
+║                Gracias por su preferencia                ║
+║                  Respaldo guardado en:                   ║
+║          documentos/salida/Ticket_Venta_31.txt           ║
+╚══════════════════════════════════════════════════════════╝

@@ -1,0 +1,24 @@
+╔══════════════════════════════════════════════════════════╗
+║              COFFEELYTICS - PUNTO DE VENTA               ║
+║                 TICKET OFICIAL DE VENTA                  ║
+╠══════════════════════════════════════════════════════════╣
+║ Folio de venta:     #00029                               ║
+║ Fecha y hora:       2026-11-22 15:48:18                  ║
+║ Atendido por:       Cristian Gomez                       ║
+║ Cliente:            Carmelo                              ║
+╟──────────────────────────────────────────────────────────╢
+║ CANT │ PRODUCTO                  │    P.UNIT │   IMPORTE ║
+║ ─────┼───────────────────────────┼───────────┼────────── ║
+║    2 │ Americano Clásico         │    $45.00 │    $90.00 ║
+║    4 │ Capuchino Cremoso         │    $60.00 │   $240.00 ║
+╟──────────────────────────────────────────────────────────╢
+║                           TOTAL A PAGAR:         $330.00 ║
+╟──────────────────────────────────────────────────────────╢
+║ Metodo de pago:     Efectivo                             ║
+║ Efectivo recibido:  $456.00                              ║
+║ Cambio entregado:   $126.00                              ║
+╟──────────────────────────────────────────────────────────╢
+║                Gracias por su preferencia                ║
+║                  Respaldo guardado en:                   ║
+║          documentos/salida/Ticket_Venta_29.txt           ║
+╚══════════════════════════════════════════════════════════╝
