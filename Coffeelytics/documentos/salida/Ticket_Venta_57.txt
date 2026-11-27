@@ -1,0 +1,23 @@
+╔══════════════════════════════════════════════════════════╗
+║              COFFEELYTICS - PUNTO DE VENTA               ║
+║                 TICKET OFICIAL DE VENTA                  ║
+╠══════════════════════════════════════════════════════════╣
+║ Folio de venta:     #00057                               ║
+║ Fecha y hora:       2026-11-25 11:51:10                  ║
+║ Atendido por:       Ismael Ramírez                       ║
+║ Cliente:            Alberto                              ║
+╟──────────────────────────────────────────────────────────╢
+║ CANT │ PRODUCTO                  │    P.UNIT │   IMPORTE ║
+║ ─────┼───────────────────────────┼───────────┼────────── ║
+║    1 │ Latte de Avena            │    $75.00 │    $75.00 ║
+╟──────────────────────────────────────────────────────────╢
+║                           TOTAL A PAGAR:          $75.00 ║
+╟──────────────────────────────────────────────────────────╢
+║ Metodo de pago:     Efectivo                             ║
+║ Efectivo recibido:  $200.00                              ║
+║ Cambio entregado:   $125.00                              ║
+╟──────────────────────────────────────────────────────────╢
+║                Gracias por su preferencia                ║
+║                  Respaldo guardado en:                   ║
+║          documentos/salida/Ticket_Venta_57.txt           ║
+╚══════════════════════════════════════════════════════════╝

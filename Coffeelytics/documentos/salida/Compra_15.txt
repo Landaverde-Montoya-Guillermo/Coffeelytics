@@ -1,0 +1,25 @@
+╔══════════════════════════════════════════════════════════╗
+║            COFFEELYTICS - COMPRAS A PROVEEDOR            ║
+║            COMPROBANTE DE COMPRA A PROVEEDOR             ║
+╠══════════════════════════════════════════════════════════╣
+║ Folio de compra:    #00015                               ║
+║ Fecha y hora:       2026-11-25 13:20:42                  ║
+║ Proveedor:          Smart & Final (Tijuana)              ║
+║ Autorizo:           Guillermo Landaverde                 ║
+║ Metodo de pago:     Efectivo                             ║
+╟──────────────────────────────────────────────────────────╢
+║    CANT │ INSUMO                 │    C.UNIT │   IMPORTE ║
+║ ────────┼────────────────────────┼───────────┼────────── ║
+║       5 │ Garrafón agua          │    $35.00 │   $175.00 ║
+║         │ purificada 20L         │           │           ║
+╟──────────────────────────────────────────────────────────╢
+║                           Subtotal:              $175.00 ║
+║                           IVA (8%):               $14.00 ║
+║                           TOTAL COMPRA:          $189.00 ║
+╟──────────────────────────────────────────────────────────╢
+║ Stock anterior:     19 grf                               ║
+║ Stock actualizado:  24 grf                               ║
+║     [OK] Stock del insumo actualizado en inventario      ║
+╟──────────────────────────────────────────────────────────╢
+║               Respaldo .txt no disponible                ║
+╚══════════════════════════════════════════════════════════╝

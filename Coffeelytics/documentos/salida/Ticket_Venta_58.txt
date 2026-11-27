@@ -1,0 +1,23 @@
+╔══════════════════════════════════════════════════════════╗
+║              COFFEELYTICS - PUNTO DE VENTA               ║
+║                 TICKET OFICIAL DE VENTA                  ║
+╠══════════════════════════════════════════════════════════╣
+║ Folio de venta:     #00058                               ║
+║ Fecha y hora:       2026-11-25 13:15:33                  ║
+║ Atendido por:       Ismael Ramírez                       ║
+║ Cliente:            Alberto                              ║
+╟──────────────────────────────────────────────────────────╢
+║ CANT │ PRODUCTO                  │    P.UNIT │   IMPORTE ║
+║ ─────┼───────────────────────────┼───────────┼────────── ║
+║    1 │ Moka Caliente             │    $74.00 │    $74.00 ║
+╟──────────────────────────────────────────────────────────╢
+║                           TOTAL A PAGAR:          $74.00 ║
+╟──────────────────────────────────────────────────────────╢
+║ Metodo de pago:     Efectivo                             ║
+║ Efectivo recibido:  $200.00                              ║
+║ Cambio entregado:   $126.00                              ║
+╟──────────────────────────────────────────────────────────╢
+║                Gracias por su preferencia                ║
+║                  Respaldo guardado en:                   ║
+║          documentos/salida/Ticket_Venta_58.txt           ║
+╚══════════════════════════════════════════════════════════╝

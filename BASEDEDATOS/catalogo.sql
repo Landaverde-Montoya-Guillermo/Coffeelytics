@@ -25,7 +25,8 @@ INSERT INTO CATEGORIA_INSUMO (codigo, nombre) VALUES
 ('JARB', 'Jarabes, Polvos y Endulzantes'),
 ('DESE', 'Desechables y Empaques'),
 ('AGUA', 'Hielo y Agua Purificada'),
-('MESA', 'Consumibles de Mesa');
+('MESA', 'Consumibles de Mesa'),
+('REPS', 'Repostería terminada');
 
 INSERT INTO categoria_producto VALUES
 ('CAFE', 'Cafés'),
@@ -46,7 +47,8 @@ INSERT INTO UNIDAD_MEDIDA (codigo, nombre, abreviatura) VALUES
 ('PAQU', 'Paquete', 'paq'),
 ('CAJA', 'Caja', 'cja'),
 ('BOLS', 'Bolsa', 'bls'),
-('GARF', 'Garrafón', 'grf');
+('GARF', 'Garrafón', 'grf'),
+('PIEZ', 'Pieza', 'pza');
 
 INSERT INTO ESTANTE (codigo, capacidad, secciones) VALUES
 (1, 10, 4),
@@ -264,7 +266,14 @@ INSERT INTO INSUMO (codigo, nombre, stockActual, stockMin, seccion, estante, cat
 ('JRMOCH', 'Jarabe sabor moka 750ml', 10.00, 3, 2, 1, 'JARB', 'BOTE'),
 ('VAS16O', 'Vaso cartón térmico 16oz (paq 50 pzas)', 28.00, 10, 1, 4, 'DESE', 'PAQU'),
 ('POPOTE', 'Paquete popotes biodegradables (250 pzas)', 18.00, 6, 2, 4, 'DESE', 'PAQU'),
-('CANELA', 'Canela molida repostería 500g', 9.00, 3, 3, 3, 'MESA', 'BOLS');
+('CANELA', 'Canela molida repostería 500g', 9.00, 3, 3, 3, 'MESA', 'BOLS'),
+-- Repostería comprada terminada: el stock inicial queda en cero hasta capturar el conteo real.
+('PTCHOC', 'Pastel de Chocolate listo para venta', 0.00, 0.00, 1, 4, 'REPS', 'PIEZ'),
+('PTZAN', 'Pastel de Zanahoria listo para venta', 0.00, 0.00, 1, 4, 'REPS', 'PIEZ'),
+('GLCHOC', 'Galleta Chispas Choc lista para venta', 0.00, 0.00, 1, 4, 'REPS', 'PIEZ'),
+('GLAVEN', 'Galleta de Avena lista para venta', 0.00, 0.00, 1, 4, 'REPS', 'PIEZ'),
+('PTREDV', 'Pastel Red Velvet listo para venta', 0.00, 0.00, 1, 4, 'REPS', 'PIEZ'),
+('GLNUEZ', 'Galleta Nuez Choco lista para venta', 0.00, 0.00, 1, 4, 'REPS', 'PIEZ');
 
 -- Nuevos productos
 INSERT INTO PRODUCTO (codigo, nombre, precio, categoria, estatus) VALUES
@@ -277,10 +286,12 @@ INSERT INTO PRODUCTO (codigo, nombre, precio, categoria, estatus) VALUES
 
 -- Nuevas recetas de bebidas
 INSERT INTO RECETA (codigo, producto) VALUES
-('RESP', 'ESPR'),
-('RMOC', 'MOCH'),
-('RLAV', 'LAVE'),
-('RFCR', 'FCRE');
+('RPCH', 'PCHO'),
+('RPZN', 'PZAN'),
+('RGCH', 'GCHO'),
+('RGAV', 'GAVE'),
+('RPRL', 'PRLC'),
+('RGNU', 'GNUT');
 
 -- Nuevos insumos por receta
 INSERT INTO REC_INSUM (insumo, receta, cantidad) VALUES
@@ -302,7 +313,16 @@ INSERT INTO REC_INSUM (insumo, receta, cantidad) VALUES
 ('HIEL5K', 'RFCR', 0.04),
 ('CREBAT', 'RFCR', 0.02),
 ('VAS16O', 'RFCR', 0.02),
-('POPOTE', 'RFCR', 0.01);
+('POPOTE', 'RFCR', 0.01),
+
+-- Cada producto de repostería comprado consume una pieza del inventario al venderse.
+INSERT INTO REC_INSUM (insumo, receta, cantidad)
+('PTCHOC', 'RPCH', 1.00),
+('PTZAN', 'RPZN', 1.00),
+('GLCHOC', 'RGCH', 1.00),
+('GLAVEN', 'RGAV', 1.00),
+('PTREDV', 'RPRL', 1.00),
+('GLNUEZ', 'RGNU', 1.00);
 
 INSERT INTO MERMA (codigo, motivo, fecha, cantidad, tipo, insumo) VALUES
 (9, 'Lata de crema batida spray con fecha de caducidad vencida en refrigeración', '2026-11-16', 2.00, 'CADUC', 'CREBAT'),
@@ -507,3 +527,140 @@ CAMBIOS EXACTOS A REALIZAR:
 (55, 'LAVE', 1, 75.00, 75.00, 6.00, 81.00),
 (56, 'MTCH', 1, 75.00, 75.00, 6.00, 81.00),
 (56, 'TISA', 1, 35.00, 35.00, 2.80, 37.80);
+
+INSERT INTO producto (codigo, nombre, precio, estatus, categoria) VALUES
+('GMAN', 'Galleta Mantequilla', 26.00, 1, 'GALL'),
+('GRED', 'Galleta Red Velvet', 32.00, 1, 'GALL'),
+('GMAC', 'Galleta Macadamia', 34.00, 1, 'GALL'),
+('GDOU', 'Galleta Doble Chocolate', 32.00, 1, 'GALL'),
+('GCAN', 'Galleta Canela Azúcar', 28.00, 1, 'GALL'),
+('PCHE', 'Cheesecake Clásico', 72.00, 1, 'PAST'),
+('PTRL', 'Pastel Tres Leches', 68.00, 1, 'PAST'),
+('PTIR', 'Pastel Tiramisú', 75.00, 1, 'PAST'),
+('PLIM', 'Pay de Limón', 60.00, 1, 'PAST'),
+('PMOK', 'Pastel de Moka', 66.00, 1, 'PAST');
+
+INSERT INTO receta (codigo, producto) VALUES
+-- Recetas GALL
+('RGMA', 'GMAN'),
+('RGRE', 'GRED'),
+('RGMC', 'GMAC'),
+('RGDO', 'GDOU'),
+('RGCA', 'GCAN'),
+('RPTR', 'PTRL'),
+('RPTI', 'PTIR'),
+('RPLI', 'PLIM'),
+('RPMO', 'PMOK');
+
+INSERT INTO rec_insum (insumo, receta, cantidad) VALUES
+-- Galletas existentes (RGAV, RGCH, RGNU)
+('LECENT', 'RGAV', 0.05),
+('CANELA', 'RGAV', 0.01),
+('SERVIL', 'RGAV', 0.01),
+
+('CHOCPO', 'RGCH', 0.02),
+('LECENT', 'RGCH', 0.05),
+('SERVIL', 'RGCH', 0.01),
+
+('CHOCPO', 'RGNU', 0.02),
+('JRVAIN', 'RGNU', 0.01),
+('SERVIL', 'RGNU', 0.01)
+
+-- Galletas nuevas (RGMA, RGRE, RGMC, RGDO, RGCA)
+INSERT INTO rec_insum (insumo, receta, cantidad) VALUES
+('LECENT', 'RGMA', 0.05),
+('JRVAIN', 'RGMA', 0.01),
+('SERVIL', 'RGMA', 0.01),
+
+('CHOCPO', 'RGRE', 0.02),
+('CREBAT', 'RGRE', 0.02),
+('SERVIL', 'RGRE', 0.01),
+
+('JRVAIN', 'RGMC', 0.01),
+('LECENT', 'RGMC', 0.05),
+('SERVIL', 'RGMC', 0.01),
+
+('CHOCPO', 'RGDO', 0.03),
+('JRMOCH', 'RGDO', 0.01),
+('SERVIL', 'RGDO', 0.01),
+
+('CANELA', 'RGCA', 0.02),
+('AZUMAS', 'RGCA', 0.02),
+('SERVIL', 'RGCA', 0.01)
+
+-- Pasteles existentes (RPCH, RPRL, RPZN)
+INSERT INTO rec_insum (insumo, receta, cantidad) VALUES
+('CHOCPO', 'RPCH', 0.04),
+('LECENT', 'RPCH', 0.08),
+('CREBAT', 'RPCH', 0.02),
+('SERVIL', 'RPCH', 0.01),
+
+('LECENT', 'RPRL', 0.08),
+('CREBAT', 'RPRL', 0.03),
+('JRVAIN', 'RPRL', 0.01),
+('SERVIL', 'RPRL', 0.01),
+
+('CANELA', 'RPZN', 0.01),
+('LECENT', 'RPZN', 0.08),
+('CREBAT', 'RPZN', 0.02),
+('SERVIL', 'RPZN', 0.01)
+
+INSERT IGNORE INTO producto (codigo, nombre, precio, estatus, categoria) VALUES
+('PCHE', 'Cheesecake Clásico', 72.00, 1, 'PAST'),
+('PTRL', 'Pastel Tres Leches', 68.00, 1, 'PAST'),
+('PTIR', 'Pastel Tiramisú', 75.00, 1, 'PAST'),
+('PLIM', 'Pay de Limón', 60.00, 1, 'PAST'),
+('PMOK', 'Pastel de Moka', 66.00, 1, 'PAST');
+
+INSERT IGNORE INTO receta (codigo, producto) VALUES
+('RPCE', 'PCHE'),
+('RPTR', 'PTRL'),
+('RPTI', 'PTIR'),
+('RPLI', 'PLIM'),
+('RPMO', 'PMOK');
+
+-- Pasteles nuevos (RPCE, RPTR, RPTI, RPLI, RPMO)
+INSERT INTO rec_insum (insumo, receta, cantidad) VALUES
+('LECENT', 'RGMA', 0.05),
+('JRVAIN', 'RGMA', 0.01),
+('SERVIL', 'RGMA', 0.01),
+
+('CHOCPO', 'RGRE', 0.02),
+('CREBAT', 'RGRE', 0.02),
+('SERVIL', 'RGRE', 0.01),
+
+('JRVAIN', 'RGMC', 0.01),
+('LECENT', 'RGMC', 0.05),
+('SERVIL', 'RGMC', 0.01),
+
+('CHOCPO', 'RGDO', 0.03),
+('JRMOCH', 'RGDO', 0.01),
+('SERVIL', 'RGDO', 0.01),
+
+('CANELA', 'RGCA', 0.02),
+('AZUMAS', 'RGCA', 0.02),
+('SERVIL', 'RGCA', 0.01),
+
+('LECENT', 'RPCE', 0.10),
+('CREBAT', 'RPCE', 0.03),
+('JRVAIN', 'RPCE', 0.01),
+('SERVIL', 'RPCE', 0.01),
+
+('LECENT', 'RPTR', 0.15),
+('CREBAT', 'RPTR', 0.03),
+('CANELA', 'RPTR', 0.01),
+('SERVIL', 'RPTR', 0.01),
+
+('ESPRES', 'RPTI', 0.02),
+('CHOCPO', 'RPTI', 0.02),
+('CREBAT', 'RPTI', 0.03),
+('SERVIL', 'RPTI', 0.01),
+
+('LECENT', 'RPLI', 0.08),
+('CREBAT', 'RPLI', 0.03),
+('SERVIL', 'RPLI', 0.01),
+
+('ESPRES', 'RPMO', 0.02),
+('JRMOCH', 'RPMO', 0.02),
+('CREBAT', 'RPMO', 0.02),
+('SERVIL', 'RPMO', 0.01);
