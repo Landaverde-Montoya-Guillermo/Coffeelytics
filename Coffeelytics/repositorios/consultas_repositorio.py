@@ -176,20 +176,47 @@ class ConsultasRepositorio(BaseRepositorio):
 
     def ventas_por_empleado_fecha(self, num_empleado, fecha_str):
         self._cursor.execute("""
-            SELECT v.codigo AS folio, v.fecha, v.nombreCliente,
-                   COALESCE(NULLIF(CONCAT_WS(' ', e.nombrePila, e.primApell, e.segApell), ''),
-                            'Sin asignar') AS empleado,
-                   COALESCE(GROUP_CONCAT(DISTINCT p.nombre ORDER BY p.nombre SEPARATOR ', '),
-                            'Sin productos') AS productos,
-                   COALESCE(m.descripcion, 'Sin metodo') AS metodoPago, v.total
+            SELECT DATE_FORMAT(v.fecha, '%Y-%m-%d %H:%i') AS fecha,
+                   CONCAT_WS(' ', e.nombrePila, e.primApell, e.segApell) AS empleado,
+                   v.codigo AS folio,
+                   v.total,
+                   mp.descripcion AS metodoPago
             FROM venta v
             INNER JOIN empleado e ON v.empleado = e.num
-            LEFT JOIN prod_venta pv ON pv.venta = v.codigo
-            LEFT JOIN producto p ON pv.producto = p.codigo
-            LEFT JOIN metodo_pago m ON v.metodoPago = m.codigo
-            WHERE v.empleado = %s AND e.rol = 'BARS' AND DATE(v.fecha) = %s
-            GROUP BY v.codigo, v.fecha, v.nombreCliente, e.nombrePila, e.primApell,
-                     e.segApell, m.descripcion, v.total
+            INNER JOIN metodo_pago mp ON v.metodoPago = mp.codigo
+            WHERE DATE(v.fecha) = %s AND v.empleado = %s AND e.rol = 'BARS'
             ORDER BY v.fecha, v.codigo
-        """, (num_empleado, fecha_str))
+        """, (fecha_str, num_empleado))
+        return self._cursor.fetchall()
+
+    def ventas_barista_ultimos_7_dias(self, num_empleado):
+        self._cursor.execute("""
+            SELECT DATE_FORMAT(v.fecha, '%Y-%m-%d %H:%i') AS fecha,
+                   CONCAT_WS(' ', e.nombrePila, e.primApell, e.segApell) AS empleado,
+                   v.codigo AS folio,
+                   v.total,
+                   mp.descripcion AS metodoPago
+            FROM venta v
+            INNER JOIN empleado e ON v.empleado = e.num
+            INNER JOIN metodo_pago mp ON v.metodoPago = mp.codigo
+            WHERE v.fecha >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+              AND v.empleado = %s AND e.rol = 'BARS'
+            ORDER BY v.fecha, v.codigo
+        """, (num_empleado,))
+        return self._cursor.fetchall()
+
+    def ventas_barista_por_mes(self, num_empleado, mes, anio):
+        self._cursor.execute("""
+            SELECT DATE_FORMAT(v.fecha, '%Y-%m-%d %H:%i') AS fecha,
+                   CONCAT_WS(' ', e.nombrePila, e.primApell, e.segApell) AS empleado,
+                   v.codigo AS folio,
+                   v.total,
+                   mp.descripcion AS metodoPago
+            FROM venta v
+            INNER JOIN empleado e ON v.empleado = e.num
+            INNER JOIN metodo_pago mp ON v.metodoPago = mp.codigo
+            WHERE MONTH(v.fecha) = %s AND YEAR(v.fecha) = %s
+              AND v.empleado = %s AND e.rol = 'BARS'
+            ORDER BY v.fecha, v.codigo
+        """, (mes, anio, num_empleado))
         return self._cursor.fetchall()

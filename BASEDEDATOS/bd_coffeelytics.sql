@@ -1,4 +1,4 @@
--- Active: 1792597882538@@127.0.0.1@3306@bd_coffeelytics
+-- Active: 1792165952930@@127.0.0.1@3306@bd_coffeelytics
 -- ============================================================================
 -- ARCHIVO: bd_coffeelytics.sql
 -- UBICACIÓN: coffeelytics/bd_coffeelytics.sql
@@ -264,7 +264,7 @@ INSERT INTO categoria_producto VALUES
 
 INSERT INTO metodo_pago VALUES
 ('EFEC', 'Efectivo'),
-('TARJ', 'Tarjeta Crédito/Débito'),I
+('TARJ', 'Tarjeta Crédito/Débito'),
 ('TRAN', 'Transferencia Electrónica');
 
 INSERT INTO unidad_medida VALUES

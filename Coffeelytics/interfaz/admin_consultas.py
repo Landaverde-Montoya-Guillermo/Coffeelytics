@@ -389,58 +389,98 @@ class AdminConsultas:
                 if idx == len(baristas):
                     return
                 emp = baristas[idx]
-                ventas_barista = self.reporte_srv.detalle_ventas_barista(emp["num"])
-                limpiar_pantalla()
-                print(imprimir_encabezado_sesion(
-                    self.usuario,
-                    breadcrumb=["Inicio", "Panel Admin", "Consultas", "C4", emp["nombre"]]
-                ))
-                pfx = _prefijo(_ancho())
-                print(f"\n{pfx}  {Color.titulo('C4 - VENTAS POR BARISTA Y FECHA')}")
-                print(f"{pfx}  Barista: {Color.CARAMELO}{emp['nombre']}{Color.RESET}\n")
-                cols_ventas = ["CODIGO", "FECHA", "CLIENTE", "METODO DE PAGO", "TOTAL"]
-                filas_ventas = [
-                    (v["folio"], v["fecha"], v["cliente"], v["metodo"], f"${v['total']:.2f}")
-                    for v in ventas_barista
+                opciones_periodo = [
+                    "Ver ventas de los ultimos 7 dias",
+                    "Ver ventas de un dia en especifico",
+                    "Ver ventas de un mes en especifico",
+                    "<< Cancelar y regresar",
                 ]
-                imprimir_tabla(f"VENTAS DE {emp['nombre']}", cols_ventas, filas_ventas)
-                if not ventas_barista:
-                    print(Color.aviso("Este barista aun no tiene ventas registradas."))
-                    pausar()
+                enc_periodo = imprimir_encabezado_sesion(
+                    self.usuario,
+                    breadcrumb=["Inicio", "Panel Admin", "Consultas", "C4",
+                                emp["nombre"], "Periodo"]
+                )
+                idx_periodo = seleccionar_con_flechas(
+                    "C4 - Selecciona periodo", opciones_periodo, enc_periodo
+                )
+                if idx_periodo == 3:
                     return
-                while True:
-                    try:
-                        fecha = input("Fecha a consultar (YYYY-MM-DD): ").strip()
-                        if len(fecha) != 10:
-                            raise ValueError
-                        datetime.datetime.strptime(fecha, "%Y-%m-%d")
-                        break
-                    except ValueError:
-                        print(Color.error(
-                            "Fecha invalida. Ingresa una fecha existente con formato YYYY-MM-DD."
-                        ))
-                        pausar()
-                ventas = self.reporte_srv.consulta_4_ventas_por_empleado_fecha(emp["num"], fecha)
+
+                if idx_periodo == 0:
+                    ventas = self.reporte_srv.consulta_4_ventas_ultimos_7_dias(emp["num"])
+                    periodo = "ULTIMOS 7 DIAS"
+                    identificador_periodo = "ultimos_7_dias"
+                elif idx_periodo == 1:
+                    while True:
+                        try:
+                            fecha = input("Fecha a consultar (YYYY-MM-DD): ").strip()
+                            if len(fecha) != 10:
+                                raise ValueError
+                            datetime.datetime.strptime(fecha, "%Y-%m-%d")
+                            break
+                        except ValueError:
+                            print(Color.error(
+                                "Fecha invalida. Ingresa una fecha con formato YYYY-MM-DD."
+                            ))
+                            pausar()
+                    ventas = self.reporte_srv.consulta_4_ventas_por_empleado_fecha(
+                        emp["num"], fecha
+                    )
+                    periodo = fecha
+                    identificador_periodo = fecha.replace("-", "")
+                else:
+                    while True:
+                        try:
+                            entrada_mes = input(
+                                "Mes (1-12) y ano opcional (ejemplo: 10 o 10 2025): "
+                            ).strip()
+                            partes_mes = entrada_mes.split()
+                            if len(partes_mes) not in (1, 2):
+                                raise ValueError
+                            mes = int(partes_mes[0])
+                            anio = int(partes_mes[1]) if len(partes_mes) == 2 else 2026
+                            if mes < 1 or mes > 12:
+                                raise ValueError
+                            datetime.datetime(anio, mes, 1)
+                            break
+                        except ValueError:
+                            print(Color.error(
+                                "Mes o ano invalido. Usa un mes del 1 al 12 y un ano valido."
+                            ))
+                            pausar()
+                    ventas = self.reporte_srv.consulta_4_ventas_por_mes(
+                        emp["num"], mes, anio
+                    )
+                    periodo = f"{mes:02d}/{anio}"
+                    identificador_periodo = f"{anio}{mes:02d}"
+
+                cols_ventas = [
+                    "FECHA",
+                    "NOMBRE COMPLETO DEL EMPLEADO",
+                    "NUMERO DE VENTA",
+                    "MONTO TOTAL DE LA VENTA",
+                    "DESCRIPCION DEL METODO DE PAGO",
+                ]
                 filas = [
-                    (v["folio"], v["fecha"], v["nombreCliente"], v["metodoPago"],
-                     f"${v['total']:.2f}")
+                    (v["fecha"], v["empleado"], v["folio"], f"${v['total']:.2f}",
+                     v["metodoPago"])
                     for v in ventas
                 ]
                 limpiar_pantalla()
                 print(imprimir_encabezado_sesion(
                     self.usuario,
                     breadcrumb=["Inicio", "Panel Admin", "Consultas", "C4",
-                                emp["nombre"], fecha]
+                                emp["nombre"], periodo]
                 ))
-                imprimir_tabla(f"C4 - VENTAS DE {emp['nombre']} EL {fecha}",
+                imprimir_tabla(f"C4 - VENTAS DE {emp['nombre']} - {periodo}",
                                cols_ventas, filas)
                 if not ventas:
-                    print(Color.aviso("Este barista no tiene ventas en la fecha seleccionada."))
+                    print(Color.aviso("Este barista no tiene ventas en el periodo seleccionado."))
                 self.reportes.reporte_generico(
-                    f"Reporte_C4_{emp['num']}_{fecha.replace('-', '')}",
+                    f"Reporte_C4_{emp['num']}_{identificador_periodo}",
                     "VENTAS POR BARISTA",
                     cols_ventas, filas,
-                    subtitulo=f"{emp['nombre']} | {fecha}"
+                    subtitulo=f"{emp['nombre']} | {periodo}"
                 )
                 pausar()
                 return
