@@ -110,7 +110,29 @@ class ReporteServicio:
     def consulta_4_ventas_por_empleado_fecha(self, num_empleado, fecha_str):
         with transaccion(dictionary=True) as cursor:
             repo = ConsultasRepositorio(cursor)
-            return repo.ventas_por_empleado_fecha(num_empleado, fecha_str)
+            filas = repo.ventas_por_empleado_fecha(num_empleado, fecha_str)
+        return self._normalizar_ventas_consulta_4(filas)
+
+    def consulta_4_ventas_ultimos_7_dias(self, num_empleado):
+        with transaccion(dictionary=True) as cursor:
+            repo = ConsultasRepositorio(cursor)
+            filas = repo.ventas_barista_ultimos_7_dias(num_empleado)
+        return self._normalizar_ventas_consulta_4(filas)
+
+    def consulta_4_ventas_por_mes(self, num_empleado, mes, anio):
+        with transaccion(dictionary=True) as cursor:
+            repo = ConsultasRepositorio(cursor)
+            filas = repo.ventas_barista_por_mes(num_empleado, mes, anio)
+        return self._normalizar_ventas_consulta_4(filas)
+
+    def _normalizar_ventas_consulta_4(self, filas):
+        return [{
+            "fecha": f["fecha"],
+            "empleado": f["empleado"],
+            "folio": f["folio"],
+            "total": float(f["total"]),
+            "metodoPago": f["metodoPago"],
+        } for f in filas]
 
     def consulta_5_insumos_receta(self, cod_producto):
         with transaccion(dictionary=True) as cursor:
