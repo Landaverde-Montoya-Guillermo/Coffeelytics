@@ -292,12 +292,14 @@ class AdminConsultas:
             breadcrumb=["Inicio", "Panel Admin", "Consultas", "C3 - Mermas"]
         )
         opts = [
+            "Ver resumen de mermas por barista",
             "Ver mermas de los ultimos 7 dias",
+            "Ver mermas de un mes especifico",
             "Buscar merma por folio",
             "<< Cancelar y regresar",
         ]
         idx = seleccionar_con_flechas("C3 - MERMAS", opts, enc)
-        if idx == 2:
+        if idx == 4:
             return
 
         # Historial de mermas: solo consulta. El registro lo hacen los baristas desde su menu.
@@ -305,6 +307,54 @@ class AdminConsultas:
                 "CANTIDAD", "TIPO DE MERMA", "MOTIVO"]
 
         if idx == 0:
+            try:
+                resumen = self.reporte_srv.resumen_mermas_por_barista()
+            except Exception as error:
+                print(Color.error(str(error)))
+                pausar()
+                return
+            if not resumen:
+                print(_centrar_texto(Color.aviso("No hay baristas registrados.")))
+                pausar()
+                return
+
+            while True:
+                limpiar_pantalla()
+                enc_resumen = "\n".join([
+                    imprimir_encabezado_sesion(
+                        self.usuario,
+                        breadcrumb=["Inicio", "Panel Admin", "Consultas", "C3 - Mermas por Barista"]
+                    ),
+                    tabla_centrada(
+                        "MERMAS POR BARISTA",
+                        ["ID", "BARISTA", "MERMAS", "ULTIMA MERMA"],
+                        [(r["id"], r["barista"], r["mermas"], r["ultima_merma"]) for r in resumen]
+                    )
+                ])
+                menu = [f"{r['id']:<5} {r['barista']:<30} Mermas: {r['mermas']}" for r in resumen]
+                menu.append("<< Volver")
+                seleccion = seleccionar_con_flechas(
+                    "MERMAS POR BARISTA - Selecciona barista", menu, enc_resumen
+                )
+                if seleccion == len(resumen):
+                    return
+
+                barista = resumen[seleccion]
+                mermas = self.reporte_srv.mermas_de_barista(barista["id"])
+                limpiar_pantalla()
+                print(imprimir_encabezado_sesion(
+                    self.usuario,
+                    breadcrumb=["Inicio", "Panel Admin", "Consultas", "C3 - Mermas por Barista",
+                                 barista["barista"]]
+                ))
+                cols_barista = ["FOLIO", "FECHA", "COD. INSUMO", "INSUMO",
+                                "CANTIDAD", "TIPO DE MERMA", "MOTIVO"]
+                filas_barista = [(m["folio"], m["fecha"], m["insumo_codigo"], m["insumo"],
+                                  m["cantidad"], m["tipo_merma"], m["motivo"]) for m in mermas]
+                imprimir_tabla(f"MERMAS DE {barista['barista']}", cols_barista, filas_barista)
+                pausar()
+
+        elif idx == 1:
             try:
                 mermas = self.reporte_srv.consulta_3_mermas_semana()
             except Exception as error:
@@ -328,7 +378,47 @@ class AdminConsultas:
             )
             pausar()
 
-        elif idx == 1:
+        elif idx == 2:
+            while True:
+                try:
+                    entrada_mes = input(
+                        "Mes (1-12) y ano opcional (ejemplo: 10 o 10 2025): "
+                    ).strip()
+                    partes_mes = entrada_mes.split()
+                    if len(partes_mes) not in (1, 2):
+                        raise ValueError
+                    mes = int(partes_mes[0])
+                    anio = int(partes_mes[1]) if len(partes_mes) == 2 else datetime.datetime.now().year
+                    if mes < 1 or mes > 12:
+                        raise ValueError
+                    datetime.datetime(anio, mes, 1)
+                    break
+                except ValueError:
+                    print(Color.error(
+                        "Mes o ano invalido. Usa un mes del 1 al 12 y un ano valido."
+                    ))
+                    pausar()
+
+            mermas = self.reporte_srv.mermas_por_mes(mes, anio)
+            filas = [(m["codigo"], m["fecha"], m["barista"], m["insumo_codigo"],
+                      m["insumo"], m["cantidad"], m["tipo_merma"], m["motivo"])
+                     for m in mermas]
+            limpiar_pantalla()
+            print(imprimir_encabezado_sesion(
+                self.usuario,
+                breadcrumb=["Inicio", "Panel Admin", "Consultas",
+                            f"C3 - Mermas {mes:02d}/{anio}"]
+            ))
+            imprimir_tabla(f"C3 - MERMAS DE {mes:02d}/{anio}", cols, filas)
+            self.reportes.reporte_generico(
+                f"Reporte_C3_Mermas_{anio}{mes:02d}",
+                f"MERMAS DE {mes:02d}/{anio}",
+                cols, filas,
+                subtitulo=f"Periodo {mes:02d}/{anio}"
+            )
+            pausar()
+
+        elif idx == 3:
             while True:
                 limpiar_pantalla()
                 print(imprimir_encabezado_sesion(

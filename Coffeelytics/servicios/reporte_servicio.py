@@ -107,6 +107,21 @@ class ReporteServicio:
             repo = ConsultasRepositorio(cursor)
             return repo.merma_por_folio(folio)
 
+    def resumen_mermas_por_barista(self):
+        with transaccion(dictionary=True) as cursor:
+            repo = ConsultasRepositorio(cursor)
+            return repo.resumen_mermas_por_barista()
+
+    def mermas_de_barista(self, num_empleado):
+        with transaccion(dictionary=True) as cursor:
+            repo = ConsultasRepositorio(cursor)
+            return repo.mermas_de_barista(num_empleado)
+
+    def mermas_por_mes(self, mes, anio):
+        with transaccion(dictionary=True) as cursor:
+            repo = ConsultasRepositorio(cursor)
+            return repo.mermas_por_mes(mes, anio)
+
     def consulta_4_ventas_por_empleado_fecha(self, num_empleado, fecha_str):
         with transaccion(dictionary=True) as cursor:
             repo = ConsultasRepositorio(cursor)
